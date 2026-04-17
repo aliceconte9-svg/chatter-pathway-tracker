@@ -1,0 +1,338 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { Trash2, Pencil, Plus, Search } from "lucide-react";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import {
+  leadsStore,
+  uid,
+  LEAD_STATUSES,
+  OBJECTIONS,
+  type Lead,
+  type LeadStatus,
+  type Objection,
+} from "@/lib/storage";
+import { useStore } from "@/hooks/use-storage";
+
+export const Route = createFileRoute("/leads")({
+  head: () => ({
+    meta: [
+      { title: "Leads — Chatter Tracker" },
+      { name: "description", content: "Manage individual prospects in your pipeline." },
+    ],
+  }),
+  component: LeadsPage,
+});
+
+const emptyForm = (): Lead => ({
+  id: uid(),
+  name: "",
+  dateContacted: format(new Date(), "yyyy-MM-dd"),
+  status: "Contacted",
+  objection: "",
+  objectionCustom: "",
+  bestMessage: "",
+  notes: "",
+});
+
+const STATUS_COLORS: Record<LeadStatus, string> = {
+  Contacted: "bg-muted text-foreground",
+  Replied: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  Convo: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
+  Qualified: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
+  Booked: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  Showed: "bg-orange-500/15 text-orange-600 dark:text-orange-400",
+  Closed: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  Lost: "bg-destructive/15 text-destructive",
+};
+
+function LeadsPage() {
+  const leads = useStore(() => leadsStore.list());
+  const [form, setForm] = useState<Lead>(emptyForm);
+  const [editing, setEditing] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    return leads
+      .filter((l) => statusFilter === "all" || l.status === statusFilter)
+      .filter((l) => !search || l.name.toLowerCase().includes(search.toLowerCase()))
+      .sort((a, b) => b.dateContacted.localeCompare(a.dateContacted));
+  }, [leads, statusFilter, search]);
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+    leadsStore.upsert(form);
+    toast.success(editing ? "Lead updated" : "Lead added");
+    setForm(emptyForm());
+    setEditing(false);
+    setShowForm(false);
+  }
+
+  function edit(lead: Lead) {
+    setForm({ ...lead });
+    setEditing(true);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function remove(id: string) {
+    if (!confirm("Delete this lead?")) return;
+    leadsStore.remove(id);
+    toast.success("Deleted");
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Leads Pipeline</h1>
+          <p className="text-sm text-muted-foreground">
+            Track each prospect by status and objection.
+          </p>
+        </div>
+        <Button
+          onClick={() => {
+            setForm(emptyForm());
+            setEditing(false);
+            setShowForm((s) => !s);
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          {showForm ? "Close" : "New lead"}
+        </Button>
+      </div>
+
+      {showForm && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{editing ? "Edit lead" : "New lead"}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={submit} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="name">Name / handle *</Label>
+                  <Input
+                    id="name"
+                    value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    placeholder="@username"
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="dateContacted">Date contacted</Label>
+                  <Input
+                    id="dateContacted"
+                    type="date"
+                    value={form.dateContacted}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, dateContacted: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Status</Label>
+                  <Select
+                    value={form.status}
+                    onValueChange={(v) => setForm((f) => ({ ...f, status: v as LeadStatus }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LEAD_STATUSES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Objection / reason</Label>
+                  <Select
+                    value={form.objection || "none"}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, objection: (v === "none" ? "" : v) as Objection }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="None" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {OBJECTIONS.map((o) => (
+                        <SelectItem key={o} value={o}>
+                          {o}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {form.objection === "Other" && (
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="objectionCustom">Custom objection</Label>
+                    <Input
+                      id="objectionCustom"
+                      value={form.objectionCustom ?? ""}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, objectionCustom: e.target.value }))
+                      }
+                      placeholder="What did they say?"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="bestMessage">Best message used</Label>
+                <Textarea
+                  id="bestMessage"
+                  rows={2}
+                  value={form.bestMessage ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, bestMessage: e.target.value }))}
+                  placeholder="Opener or message that worked best"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  rows={2}
+                  value={form.notes ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Button type="submit">{editing ? "Save changes" : "Add lead"}</Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditing(false);
+                    setForm(emptyForm());
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader className="gap-3">
+          <CardTitle className="text-base">Pipeline ({filtered.length})</CardTitle>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {LEAD_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="overflow-x-auto p-0">
+          {filtered.length === 0 ? (
+            <p className="px-6 py-8 text-center text-sm text-muted-foreground">
+              No leads match. Add one above.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Objection</TableHead>
+                  <TableHead>Notes</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((l) => (
+                  <TableRow key={l.id}>
+                    <TableCell className="font-medium">{l.name}</TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {format(new Date(l.dateContacted), "MMM d")}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={STATUS_COLORS[l.status]}>
+                        {l.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {l.objection === "Other"
+                        ? l.objectionCustom || "Other"
+                        : l.objection || "—"}
+                    </TableCell>
+                    <TableCell className="max-w-[240px] truncate text-sm text-muted-foreground">
+                      {l.notes || l.bestMessage || "—"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => edit(l)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => remove(l.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
