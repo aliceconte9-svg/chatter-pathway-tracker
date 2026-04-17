@@ -421,7 +421,10 @@ function LeadsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>IG</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Stage</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Objection</TableHead>
                   <TableHead>Notes</TableHead>
@@ -432,8 +435,23 @@ function LeadsPage() {
                 {filtered.map((l) => (
                   <TableRow key={l.id}>
                     <TableCell className="font-medium">{l.name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {l.igUsername || "—"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {l.source || "—"}
+                    </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {format(new Date(l.dateContacted), "MMM d")}
+                    </TableCell>
+                    <TableCell>
+                      {l.contactStage ? (
+                        <Badge variant="secondary" className={STAGE_COLORS[l.contactStage]}>
+                          {l.contactStage}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={STATUS_COLORS[l.status]}>
