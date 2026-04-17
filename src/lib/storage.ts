@@ -26,6 +26,16 @@ export const LEAD_STATUSES = [
 ] as const;
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
+export const LEAD_SOURCES = ["Follower", "Storia", "Esplora", "Hashtag", "Referral", "Other"] as const;
+export type LeadSource = (typeof LEAD_SOURCES)[number];
+
+export const CONTACT_STAGES = [
+  "Conversazione iniziata",
+  "Follow-up mandato",
+  "Da ricontattare",
+] as const;
+export type ContactStage = (typeof CONTACT_STAGES)[number];
+
 export const OBJECTIONS = [
   "Too expensive",
   "No time",
@@ -39,6 +49,9 @@ export type Objection = (typeof OBJECTIONS)[number] | "";
 export type Lead = {
   id: string;
   name: string;
+  igUsername?: string;
+  source?: LeadSource;
+  contactStage?: ContactStage;
   dateContacted: string; // ISO yyyy-MM-dd
   status: LeadStatus;
   objection?: Objection;

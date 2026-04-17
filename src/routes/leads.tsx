@@ -30,9 +30,13 @@ import {
   leadsStore,
   uid,
   LEAD_STATUSES,
+  LEAD_SOURCES,
+  CONTACT_STAGES,
   OBJECTIONS,
   type Lead,
   type LeadStatus,
+  type LeadSource,
+  type ContactStage,
   type Objection,
 } from "@/lib/storage";
 import { useStore } from "@/hooks/use-storage";
@@ -50,6 +54,9 @@ export const Route = createFileRoute("/leads")({
 const emptyForm = (): Lead => ({
   id: uid(),
   name: "",
+  igUsername: "",
+  source: "Follower",
+  contactStage: "Conversazione iniziata",
   dateContacted: format(new Date(), "yyyy-MM-dd"),
   status: "Contacted",
   objection: "",
@@ -57,6 +64,12 @@ const emptyForm = (): Lead => ({
   bestMessage: "",
   notes: "",
 });
+
+const STAGE_COLORS: Record<ContactStage, string> = {
+  "Conversazione iniziata": "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  "Follow-up mandato": "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  "Da ricontattare": "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+};
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
   Contacted: "bg-muted text-foreground",
@@ -78,9 +91,15 @@ function LeadsPage() {
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
+    const q = search.toLowerCase();
     return leads
       .filter((l) => statusFilter === "all" || l.status === statusFilter)
-      .filter((l) => !search || l.name.toLowerCase().includes(search.toLowerCase()))
+      .filter(
+        (l) =>
+          !search ||
+          l.name.toLowerCase().includes(q) ||
+          (l.igUsername ?? "").toLowerCase().includes(q),
+      )
       .sort((a, b) => b.dateContacted.localeCompare(a.dateContacted));
   }, [leads, statusFilter, search]);
 
@@ -150,6 +169,17 @@ function LeadsPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <Label htmlFor="igUsername">IG username</Label>
+                  <Input
+                    id="igUsername"
+                    value={form.igUsername ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, igUsername: e.target.value }))
+                    }
+                    placeholder="@handle"
+                  />
+                </div>
+                <div className="space-y-1.5">
                   <Label htmlFor="dateContacted">Date contacted</Label>
                   <Input
                     id="dateContacted"
@@ -159,6 +189,46 @@ function LeadsPage() {
                       setForm((f) => ({ ...f, dateContacted: e.target.value }))
                     }
                   />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Source</Label>
+                  <Select
+                    value={form.source ?? "Follower"}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, source: v as LeadSource }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LEAD_SOURCES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Contact stage</Label>
+                  <Select
+                    value={form.contactStage ?? "Conversazione iniziata"}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, contactStage: v as ContactStage }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CONTACT_STAGES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Status</Label>
@@ -351,7 +421,10 @@ function LeadsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>IG</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Stage</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Objection</TableHead>
                   <TableHead>Notes</TableHead>
@@ -362,8 +435,23 @@ function LeadsPage() {
                 {filtered.map((l) => (
                   <TableRow key={l.id}>
                     <TableCell className="font-medium">{l.name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {l.igUsername || "—"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {l.source || "—"}
+                    </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {format(new Date(l.dateContacted), "MMM d")}
+                    </TableCell>
+                    <TableCell>
+                      {l.contactStage ? (
+                        <Badge variant="secondary" className={STAGE_COLORS[l.contactStage]}>
+                          {l.contactStage}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={STATUS_COLORS[l.status]}>
