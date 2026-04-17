@@ -37,10 +37,13 @@ export const Route = createRootRoute({
         content:
           "Track DMs, replies, qualified leads, calls and sales. See reply rate, booking rate and close rate week by week.",
       },
-      { property: "og:title", content: "Chatter Tracker" },
-      { property: "og:description", content: "DM outreach performance tracker." },
+      { property: "og:title", content: "Chatter Tracker — DM outreach performance" },
+      { property: "og:description", content: "Chatter Tracker monitors your sales outreach funnel, from initial contact to closed deals." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Chatter Tracker — DM outreach performance" },
+      { name: "description", content: "Chatter Tracker monitors your sales outreach funnel, from initial contact to closed deals." },
+      { name: "twitter:description", content: "Chatter Tracker monitors your sales outreach funnel, from initial contact to closed deals." },
     ],
     links: [
       {
