@@ -98,12 +98,36 @@ export const DEFAULT_TARGETS: Targets = {
   sales: 4,
 };
 
+export const TIME_ACTIVITIES = ["dming", "followups", "chatting"] as const;
+export type TimeActivity = (typeof TIME_ACTIVITIES)[number];
+
+export const TIME_ACTIVITY_LABELS: Record<TimeActivity, string> = {
+  dming: "DMing new followers",
+  followups: "Sending follow-ups",
+  chatting: "Chatting with replies",
+};
+
+export type TimeEntry = {
+  id: string;
+  date: string; // ISO yyyy-MM-dd
+  activity: TimeActivity;
+  seconds: number;
+  note?: string;
+};
+
+export type ActiveTimer = {
+  activity: TimeActivity;
+  startedAt: number; // epoch ms
+} | null;
+
 const KEYS = {
   daily: "chatter:daily",
   leads: "chatter:leads",
   targets: "chatter:targets",
   experiments: "chatter:experiments",
   playbook: "chatter:playbook",
+  time: "chatter:time",
+  activeTimer: "chatter:activeTimer",
 };
 
 function read<T>(key: string, fallback: T): T {
