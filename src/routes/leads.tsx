@@ -398,3 +398,24 @@ function LeadsPage() {
     </div>
   );
 }
+
+function LeadsStats({ leads }: { leads: Lead[] }) {
+  const ttfrs = leads.map((l) => l.timeToFirstReplyMin).filter((x): x is number => typeof x === "number");
+  const msgs = leads.map((l) => l.messagesToBooking).filter((x): x is number => typeof x === "number");
+  const lens = leads.map((l) => l.conversationLength).filter((x): x is number => typeof x === "number");
+  const avg = (arr: number[]) =>
+    arr.length ? (arr.reduce((s, n) => s + n, 0) / arr.length).toFixed(1) : "—";
+  return (
+    <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+      <span>
+        Avg time to 1st reply: <span className="font-semibold text-foreground">{avg(ttfrs)} min</span>
+      </span>
+      <span>
+        Avg msgs to booking: <span className="font-semibold text-foreground">{avg(msgs)}</span>
+      </span>
+      <span>
+        Avg convo length: <span className="font-semibold text-foreground">{avg(lens)}</span>
+      </span>
+    </div>
+  );
+}
