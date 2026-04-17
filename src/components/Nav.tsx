@@ -1,8 +1,16 @@
 import { Link } from "@tanstack/react-router";
-import { BarChart3, CalendarDays, Users, TableProperties, Settings } from "lucide-react";
+import {
+  BarChart3,
+  CalendarDays,
+  Users,
+  TableProperties,
+  Settings,
+  FlaskConical,
+  BookOpen,
+} from "lucide-react";
 
 type NavItem = {
-  to: "/" | "/daily" | "/leads" | "/weekly" | "/settings";
+  to: "/" | "/daily" | "/leads" | "/weekly" | "/experiments" | "/playbook" | "/settings";
   label: string;
   icon: typeof BarChart3;
   exact?: boolean;
@@ -13,6 +21,8 @@ const items: NavItem[] = [
   { to: "/daily", label: "Daily", icon: CalendarDays },
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/weekly", label: "Weekly", icon: TableProperties },
+  { to: "/experiments", label: "Tests", icon: FlaskConical },
+  { to: "/playbook", label: "Playbook", icon: BookOpen },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 

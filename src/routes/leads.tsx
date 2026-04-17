@@ -223,6 +223,65 @@ function LeadsPage() {
                   placeholder="Opener or message that worked best"
                 />
               </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="ttfr">Time to 1st reply (min)</Label>
+                  <Input
+                    id="ttfr"
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={form.timeToFirstReplyMin ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        timeToFirstReplyMin: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="e.g. 12"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="msgs">Messages to booking</Label>
+                  <Input
+                    id="msgs"
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={form.messagesToBooking ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        messagesToBooking: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="e.g. 8"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="convlen">Conversation length</Label>
+                  <Input
+                    id="convlen"
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={form.conversationLength ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        conversationLength: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="total messages"
+                  />
+                </div>
+              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
@@ -253,7 +312,10 @@ function LeadsPage() {
 
       <Card>
         <CardHeader className="gap-3">
-          <CardTitle className="text-base">Pipeline ({filtered.length})</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle className="text-base">Pipeline ({filtered.length})</CardTitle>
+            <LeadsStats leads={leads} />
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -333,6 +395,27 @@ function LeadsPage() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function LeadsStats({ leads }: { leads: Lead[] }) {
+  const ttfrs = leads.map((l) => l.timeToFirstReplyMin).filter((x): x is number => typeof x === "number");
+  const msgs = leads.map((l) => l.messagesToBooking).filter((x): x is number => typeof x === "number");
+  const lens = leads.map((l) => l.conversationLength).filter((x): x is number => typeof x === "number");
+  const avg = (arr: number[]) =>
+    arr.length ? (arr.reduce((s, n) => s + n, 0) / arr.length).toFixed(1) : "—";
+  return (
+    <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+      <span>
+        Avg time to 1st reply: <span className="font-semibold text-foreground">{avg(ttfrs)} min</span>
+      </span>
+      <span>
+        Avg msgs to booking: <span className="font-semibold text-foreground">{avg(msgs)}</span>
+      </span>
+      <span>
+        Avg convo length: <span className="font-semibold text-foreground">{avg(lens)}</span>
+      </span>
     </div>
   );
 }

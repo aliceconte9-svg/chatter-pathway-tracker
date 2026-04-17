@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeeklyRouteImport } from './routes/weekly'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as PlaybookRouteImport } from './routes/playbook'
 import { Route as LeadsRouteImport } from './routes/leads'
+import { Route as ExperimentsRouteImport } from './routes/experiments'
 import { Route as DailyRouteImport } from './routes/daily'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -25,9 +27,19 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlaybookRoute = PlaybookRouteImport.update({
+  id: '/playbook',
+  path: '/playbook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LeadsRoute = LeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExperimentsRoute = ExperimentsRouteImport.update({
+  id: '/experiments',
+  path: '/experiments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DailyRoute = DailyRouteImport.update({
@@ -44,14 +56,18 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/daily': typeof DailyRoute
+  '/experiments': typeof ExperimentsRoute
   '/leads': typeof LeadsRoute
+  '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
   '/weekly': typeof WeeklyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/daily': typeof DailyRoute
+  '/experiments': typeof ExperimentsRoute
   '/leads': typeof LeadsRoute
+  '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
   '/weekly': typeof WeeklyRoute
 }
@@ -59,22 +75,48 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/daily': typeof DailyRoute
+  '/experiments': typeof ExperimentsRoute
   '/leads': typeof LeadsRoute
+  '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
   '/weekly': typeof WeeklyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/daily' | '/leads' | '/settings' | '/weekly'
+  fullPaths:
+    | '/'
+    | '/daily'
+    | '/experiments'
+    | '/leads'
+    | '/playbook'
+    | '/settings'
+    | '/weekly'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/daily' | '/leads' | '/settings' | '/weekly'
-  id: '__root__' | '/' | '/daily' | '/leads' | '/settings' | '/weekly'
+  to:
+    | '/'
+    | '/daily'
+    | '/experiments'
+    | '/leads'
+    | '/playbook'
+    | '/settings'
+    | '/weekly'
+  id:
+    | '__root__'
+    | '/'
+    | '/daily'
+    | '/experiments'
+    | '/leads'
+    | '/playbook'
+    | '/settings'
+    | '/weekly'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DailyRoute: typeof DailyRoute
+  ExperimentsRoute: typeof ExperimentsRoute
   LeadsRoute: typeof LeadsRoute
+  PlaybookRoute: typeof PlaybookRoute
   SettingsRoute: typeof SettingsRoute
   WeeklyRoute: typeof WeeklyRoute
 }
@@ -95,11 +137,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/playbook': {
+      id: '/playbook'
+      path: '/playbook'
+      fullPath: '/playbook'
+      preLoaderRoute: typeof PlaybookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leads': {
       id: '/leads'
       path: '/leads'
       fullPath: '/leads'
       preLoaderRoute: typeof LeadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/experiments': {
+      id: '/experiments'
+      path: '/experiments'
+      fullPath: '/experiments'
+      preLoaderRoute: typeof ExperimentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/daily': {
@@ -122,7 +178,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DailyRoute: DailyRoute,
+  ExperimentsRoute: ExperimentsRoute,
   LeadsRoute: LeadsRoute,
+  PlaybookRoute: PlaybookRoute,
   SettingsRoute: SettingsRoute,
   WeeklyRoute: WeeklyRoute,
 }

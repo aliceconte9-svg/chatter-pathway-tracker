@@ -45,6 +45,39 @@ export type Lead = {
   objectionCustom?: string;
   bestMessage?: string;
   notes?: string;
+  // Advanced metrics (optional)
+  timeToFirstReplyMin?: number; // minutes between DM sent and first reply
+  messagesToBooking?: number; // number of messages exchanged before booking
+  conversationLength?: number; // total message count in the conversation
+};
+
+export type Experiment = {
+  id: string;
+  weekKey: string; // ISO Monday yyyy-MM-dd
+  hypothesis: string;
+  metric: "replyRate" | "convoRate" | "bookingRate" | "closeRate";
+  variantAName: string;
+  variantADms: number;
+  variantAReplies: number;
+  variantAConvos: number;
+  variantABooked: number;
+  variantASales: number;
+  variantBName: string;
+  variantBDms: number;
+  variantBReplies: number;
+  variantBConvos: number;
+  variantBBooked: number;
+  variantBSales: number;
+  notes?: string;
+};
+
+export type PlaybookCategory = "opener" | "qualification" | "closing";
+export type PlaybookEntry = {
+  id: string;
+  category: PlaybookCategory;
+  title: string;
+  body: string;
+  createdAt: string; // ISO
 };
 
 export type Targets = {
@@ -69,6 +102,8 @@ const KEYS = {
   daily: "chatter:daily",
   leads: "chatter:leads",
   targets: "chatter:targets",
+  experiments: "chatter:experiments",
+  playbook: "chatter:playbook",
 };
 
 function read<T>(key: string, fallback: T): T {
@@ -122,13 +157,45 @@ export const targetsStore = {
   set: (t: Targets) => write(KEYS.targets, t),
 };
 
+export const experimentsStore = {
+  list: () => read<Experiment[]>(KEYS.experiments, []),
+  save: (xs: Experiment[]) => write(KEYS.experiments, xs),
+  upsert(x: Experiment) {
+    const all = experimentsStore.list();
+    const idx = all.findIndex((e) => e.id === x.id);
+    if (idx >= 0) all[idx] = x;
+    else all.push(x);
+    experimentsStore.save(all);
+  },
+  remove(id: string) {
+    experimentsStore.save(experimentsStore.list().filter((e) => e.id !== id));
+  },
+};
+
+export const playbookStore = {
+  list: () => read<PlaybookEntry[]>(KEYS.playbook, []),
+  save: (xs: PlaybookEntry[]) => write(KEYS.playbook, xs),
+  upsert(x: PlaybookEntry) {
+    const all = playbookStore.list();
+    const idx = all.findIndex((e) => e.id === x.id);
+    if (idx >= 0) all[idx] = x;
+    else all.push(x);
+    playbookStore.save(all);
+  },
+  remove(id: string) {
+    playbookStore.save(playbookStore.list().filter((e) => e.id !== id));
+  },
+};
+
 export function exportAll() {
   return {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     daily: dailyStore.list(),
     leads: leadsStore.list(),
     targets: targetsStore.get(),
+    experiments: experimentsStore.list(),
+    playbook: playbookStore.list(),
   };
 }
 
@@ -136,6 +203,8 @@ export function importAll(data: ReturnType<typeof exportAll>) {
   if (data.daily) dailyStore.save(data.daily);
   if (data.leads) leadsStore.save(data.leads);
   if (data.targets) targetsStore.set(data.targets);
+  if (data.experiments) experimentsStore.save(data.experiments);
+  if (data.playbook) playbookStore.save(data.playbook);
 }
 
 export function uid() {
