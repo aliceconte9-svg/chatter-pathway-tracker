@@ -169,6 +169,17 @@ function LeadsPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <Label htmlFor="igUsername">IG username</Label>
+                  <Input
+                    id="igUsername"
+                    value={form.igUsername ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, igUsername: e.target.value }))
+                    }
+                    placeholder="@handle"
+                  />
+                </div>
+                <div className="space-y-1.5">
                   <Label htmlFor="dateContacted">Date contacted</Label>
                   <Input
                     id="dateContacted"
@@ -178,6 +189,46 @@ function LeadsPage() {
                       setForm((f) => ({ ...f, dateContacted: e.target.value }))
                     }
                   />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Source</Label>
+                  <Select
+                    value={form.source ?? "Follower"}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, source: v as LeadSource }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LEAD_SOURCES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Contact stage</Label>
+                  <Select
+                    value={form.contactStage ?? "Conversazione iniziata"}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, contactStage: v as ContactStage }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CONTACT_STAGES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Status</Label>
