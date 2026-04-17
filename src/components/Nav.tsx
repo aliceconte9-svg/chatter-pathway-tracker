@@ -7,10 +7,11 @@ import {
   Settings,
   FlaskConical,
   BookOpen,
+  Timer,
 } from "lucide-react";
 
 type NavItem = {
-  to: "/" | "/daily" | "/leads" | "/weekly" | "/experiments" | "/playbook" | "/settings";
+  to: "/" | "/daily" | "/leads" | "/weekly" | "/experiments" | "/playbook" | "/time" | "/settings";
   label: string;
   icon: typeof BarChart3;
   exact?: boolean;
@@ -19,6 +20,7 @@ type NavItem = {
 const items: NavItem[] = [
   { to: "/", label: "Dashboard", icon: BarChart3, exact: true },
   { to: "/daily", label: "Daily", icon: CalendarDays },
+  { to: "/time", label: "Time", icon: Timer },
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/weekly", label: "Weekly", icon: TableProperties },
   { to: "/experiments", label: "Tests", icon: FlaskConical },

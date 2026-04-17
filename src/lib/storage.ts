@@ -98,12 +98,36 @@ export const DEFAULT_TARGETS: Targets = {
   sales: 4,
 };
 
+export const TIME_ACTIVITIES = ["dming", "followups", "chatting"] as const;
+export type TimeActivity = (typeof TIME_ACTIVITIES)[number];
+
+export const TIME_ACTIVITY_LABELS: Record<TimeActivity, string> = {
+  dming: "DMing new followers",
+  followups: "Sending follow-ups",
+  chatting: "Chatting with replies",
+};
+
+export type TimeEntry = {
+  id: string;
+  date: string; // ISO yyyy-MM-dd
+  activity: TimeActivity;
+  seconds: number;
+  note?: string;
+};
+
+export type ActiveTimer = {
+  activity: TimeActivity;
+  startedAt: number; // epoch ms
+} | null;
+
 const KEYS = {
   daily: "chatter:daily",
   leads: "chatter:leads",
   targets: "chatter:targets",
   experiments: "chatter:experiments",
   playbook: "chatter:playbook",
+  time: "chatter:time",
+  activeTimer: "chatter:activeTimer",
 };
 
 function read<T>(key: string, fallback: T): T {
@@ -187,15 +211,31 @@ export const playbookStore = {
   },
 };
 
+export const timeStore = {
+  list: () => read<TimeEntry[]>(KEYS.time, []),
+  save: (xs: TimeEntry[]) => write(KEYS.time, xs),
+  add(entry: TimeEntry) {
+    const all = timeStore.list();
+    all.push(entry);
+    timeStore.save(all);
+  },
+  remove(id: string) {
+    timeStore.save(timeStore.list().filter((e) => e.id !== id));
+  },
+  getActive: () => read<ActiveTimer>(KEYS.activeTimer, null),
+  setActive: (t: ActiveTimer) => write(KEYS.activeTimer, t),
+};
+
 export function exportAll() {
   return {
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     daily: dailyStore.list(),
     leads: leadsStore.list(),
     targets: targetsStore.get(),
     experiments: experimentsStore.list(),
     playbook: playbookStore.list(),
+    time: timeStore.list(),
   };
 }
 
@@ -205,6 +245,7 @@ export function importAll(data: ReturnType<typeof exportAll>) {
   if (data.targets) targetsStore.set(data.targets);
   if (data.experiments) experimentsStore.save(data.experiments);
   if (data.playbook) playbookStore.save(data.playbook);
+  if (data.time) timeStore.save(data.time);
 }
 
 export function uid() {
