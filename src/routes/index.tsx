@@ -414,3 +414,54 @@ function LegendDot({ color, label }: { color: string; label: string }) {
     </span>
   );
 }
+
+function BottleneckCard({
+  week,
+  targets,
+}: {
+  week: import("@/lib/week").WeekTotals;
+  targets: import("@/lib/storage").Targets;
+}) {
+  const b = findBottleneck(week, targets);
+  const isGreen = b.step === "none";
+  return (
+    <Card
+      className={cn(
+        "border-l-4",
+        isGreen
+          ? "border-l-emerald-500 bg-emerald-500/5"
+          : "border-l-primary bg-primary/5",
+      )}
+    >
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Target className={cn("h-4 w-4", isGreen ? "text-emerald-600" : "text-primary")} />
+          Bottleneck this week — {b.title}
+        </CardTitle>
+        <CardDescription>{b.diagnosis}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {!isGreen && b.target > 0 && (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Current {b.rate.toFixed(1)}%</span>
+              <span>Target {b.target.toFixed(0)}%</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{
+                  width: `${Math.min(100, Math.max(2, (b.rate / b.target) * 100))}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+        <div className="rounded-md bg-background/60 p-3 text-sm">
+          <span className="font-semibold">Fix: </span>
+          {b.fix}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

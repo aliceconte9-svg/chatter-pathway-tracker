@@ -223,6 +223,65 @@ function LeadsPage() {
                   placeholder="Opener or message that worked best"
                 />
               </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="ttfr">Time to 1st reply (min)</Label>
+                  <Input
+                    id="ttfr"
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={form.timeToFirstReplyMin ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        timeToFirstReplyMin: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="e.g. 12"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="msgs">Messages to booking</Label>
+                  <Input
+                    id="msgs"
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={form.messagesToBooking ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        messagesToBooking: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="e.g. 8"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="convlen">Conversation length</Label>
+                  <Input
+                    id="convlen"
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={form.conversationLength ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        conversationLength: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="total messages"
+                  />
+                </div>
+              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
