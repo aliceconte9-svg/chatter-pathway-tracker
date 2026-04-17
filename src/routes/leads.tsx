@@ -66,6 +66,7 @@ const emptyForm = (): Lead => ({
 });
 
 const STAGE_COLORS: Record<ContactStage, string> = {
+  "Messaggio mandato": "bg-slate-500/15 text-slate-600 dark:text-slate-400",
   "Conversazione iniziata": "bg-blue-500/15 text-blue-600 dark:text-blue-400",
   "Follow-up mandato": "bg-amber-500/15 text-amber-600 dark:text-amber-400",
   "Da ricontattare": "bg-rose-500/15 text-rose-600 dark:text-rose-400",

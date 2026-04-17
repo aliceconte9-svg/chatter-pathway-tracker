@@ -30,6 +30,7 @@ export const LEAD_SOURCES = ["Follower", "Storia", "Esplora", "Hashtag", "Referr
 export type LeadSource = (typeof LEAD_SOURCES)[number];
 
 export const CONTACT_STAGES = [
+  "Messaggio mandato",
   "Conversazione iniziata",
   "Follow-up mandato",
   "Da ricontattare",
