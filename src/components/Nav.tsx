@@ -1,13 +1,20 @@
 import { Link } from "@tanstack/react-router";
 import { BarChart3, CalendarDays, Users, TableProperties, Settings } from "lucide-react";
 
-const items = [
+type NavItem = {
+  to: "/" | "/daily" | "/leads" | "/weekly" | "/settings";
+  label: string;
+  icon: typeof BarChart3;
+  exact?: boolean;
+};
+
+const items: NavItem[] = [
   { to: "/", label: "Dashboard", icon: BarChart3, exact: true },
   { to: "/daily", label: "Daily", icon: CalendarDays },
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/weekly", label: "Weekly", icon: TableProperties },
   { to: "/settings", label: "Settings", icon: Settings },
-] as const;
+];
 
 export function Nav() {
   return (
