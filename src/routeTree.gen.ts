@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeeklyRouteImport } from './routes/weekly'
+import { Route as TimeRouteImport } from './routes/time'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PlaybookRouteImport } from './routes/playbook'
 import { Route as LeadsRouteImport } from './routes/leads'
@@ -20,6 +21,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const WeeklyRoute = WeeklyRouteImport.update({
   id: '/weekly',
   path: '/weekly',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TimeRoute = TimeRouteImport.update({
+  id: '/time',
+  path: '/time',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/leads': typeof LeadsRoute
   '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
+  '/time': typeof TimeRoute
   '/weekly': typeof WeeklyRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/leads': typeof LeadsRoute
   '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
+  '/time': typeof TimeRoute
   '/weekly': typeof WeeklyRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/leads': typeof LeadsRoute
   '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
+  '/time': typeof TimeRoute
   '/weekly': typeof WeeklyRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/playbook'
     | '/settings'
+    | '/time'
     | '/weekly'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/playbook'
     | '/settings'
+    | '/time'
     | '/weekly'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/playbook'
     | '/settings'
+    | '/time'
     | '/weekly'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   LeadsRoute: typeof LeadsRoute
   PlaybookRoute: typeof PlaybookRoute
   SettingsRoute: typeof SettingsRoute
+  TimeRoute: typeof TimeRoute
   WeeklyRoute: typeof WeeklyRoute
 }
 
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/weekly'
       fullPath: '/weekly'
       preLoaderRoute: typeof WeeklyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/time': {
+      id: '/time'
+      path: '/time'
+      fullPath: '/time'
+      preLoaderRoute: typeof TimeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -182,8 +202,18 @@ const rootRouteChildren: RootRouteChildren = {
   LeadsRoute: LeadsRoute,
   PlaybookRoute: PlaybookRoute,
   SettingsRoute: SettingsRoute,
+  TimeRoute: TimeRoute,
   WeeklyRoute: WeeklyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
