@@ -211,15 +211,31 @@ export const playbookStore = {
   },
 };
 
+export const timeStore = {
+  list: () => read<TimeEntry[]>(KEYS.time, []),
+  save: (xs: TimeEntry[]) => write(KEYS.time, xs),
+  add(entry: TimeEntry) {
+    const all = timeStore.list();
+    all.push(entry);
+    timeStore.save(all);
+  },
+  remove(id: string) {
+    timeStore.save(timeStore.list().filter((e) => e.id !== id));
+  },
+  getActive: () => read<ActiveTimer>(KEYS.activeTimer, null),
+  setActive: (t: ActiveTimer) => write(KEYS.activeTimer, t),
+};
+
 export function exportAll() {
   return {
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     daily: dailyStore.list(),
     leads: leadsStore.list(),
     targets: targetsStore.get(),
     experiments: experimentsStore.list(),
     playbook: playbookStore.list(),
+    time: timeStore.list(),
   };
 }
 
@@ -229,6 +245,7 @@ export function importAll(data: ReturnType<typeof exportAll>) {
   if (data.targets) targetsStore.set(data.targets);
   if (data.experiments) experimentsStore.save(data.experiments);
   if (data.playbook) playbookStore.save(data.playbook);
+  if (data.time) timeStore.save(data.time);
 }
 
 export function uid() {
