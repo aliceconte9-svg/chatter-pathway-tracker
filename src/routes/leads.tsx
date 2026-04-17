@@ -312,7 +312,10 @@ function LeadsPage() {
 
       <Card>
         <CardHeader className="gap-3">
-          <CardTitle className="text-base">Pipeline ({filtered.length})</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle className="text-base">Pipeline ({filtered.length})</CardTitle>
+            <LeadsStats leads={leads} />
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
