@@ -91,9 +91,15 @@ function LeadsPage() {
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
+    const q = search.toLowerCase();
     return leads
       .filter((l) => statusFilter === "all" || l.status === statusFilter)
-      .filter((l) => !search || l.name.toLowerCase().includes(search.toLowerCase()))
+      .filter(
+        (l) =>
+          !search ||
+          l.name.toLowerCase().includes(q) ||
+          (l.igUsername ?? "").toLowerCase().includes(q),
+      )
       .sort((a, b) => b.dateContacted.localeCompare(a.dateContacted));
   }, [leads, statusFilter, search]);
 
