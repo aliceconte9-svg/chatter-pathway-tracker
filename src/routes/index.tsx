@@ -12,7 +12,9 @@ import {
   Bar,
   Cell,
 } from "recharts";
-import { TrendingUp, TrendingDown, ArrowRight, AlertCircle } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRight, AlertCircle, Target } from "lucide-react";
+
+import { findBottleneck } from "@/lib/bottleneck";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -200,6 +202,8 @@ function DashboardPage() {
           rawSub={`Close rate ${fmtPct(thisWeek.sales, thisWeek.showed)}`}
         />
       </div>
+
+      {hasData && <BottleneckCard week={thisWeek} targets={targets} />}
 
       {hints.length > 0 && (
         <Card className="border-amber-500/30 bg-amber-500/5">
