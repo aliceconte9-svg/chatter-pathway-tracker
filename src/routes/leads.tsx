@@ -30,9 +30,13 @@ import {
   leadsStore,
   uid,
   LEAD_STATUSES,
+  LEAD_SOURCES,
+  CONTACT_STAGES,
   OBJECTIONS,
   type Lead,
   type LeadStatus,
+  type LeadSource,
+  type ContactStage,
   type Objection,
 } from "@/lib/storage";
 import { useStore } from "@/hooks/use-storage";
@@ -50,6 +54,9 @@ export const Route = createFileRoute("/leads")({
 const emptyForm = (): Lead => ({
   id: uid(),
   name: "",
+  igUsername: "",
+  source: "Follower",
+  contactStage: "Conversazione iniziata",
   dateContacted: format(new Date(), "yyyy-MM-dd"),
   status: "Contacted",
   objection: "",
@@ -57,6 +64,12 @@ const emptyForm = (): Lead => ({
   bestMessage: "",
   notes: "",
 });
+
+const STAGE_COLORS: Record<ContactStage, string> = {
+  "Conversazione iniziata": "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  "Follow-up mandato": "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  "Da ricontattare": "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+};
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
   Contacted: "bg-muted text-foreground",
