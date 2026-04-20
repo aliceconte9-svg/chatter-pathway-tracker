@@ -137,6 +137,16 @@ function DailyPage() {
                 />
               </div>
             </div>
+            <div className="rounded-md border border-border bg-muted/40 p-3 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground">Auto-tracked DMs on this date</span>
+                <span className="text-lg font-bold tabular-nums">{autoDmsForDate}</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Counts leads whose <em>Last contacted</em> matches this date. Use the{" "}
+                <strong>Contacted</strong> action on the Dashboard or Leads page to update it.
+              </p>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {FIELDS.map((f) => (
                 <div key={f.key} className="space-y-1.5">
