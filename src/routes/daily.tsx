@@ -72,10 +72,14 @@ const emptyForm = (): DailyEntry => ({
 
 function DailyPage() {
   const entries = useStore(() => dailyStore.list());
+  const leads = useStore(() => leadsStore.list());
   const [form, setForm] = useState<DailyEntry>(emptyForm);
   const [editing, setEditing] = useState(false);
 
   const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
+  const leadsForDate = leads
+    .filter((l) => l.dateContacted === form.date)
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   function setNum(key: keyof DailyEntry, v: string) {
     const n = Math.max(0, Math.floor(Number(v) || 0));
