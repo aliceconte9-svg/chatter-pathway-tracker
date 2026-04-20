@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -61,6 +61,8 @@ function DashboardPage() {
   const entries = useStore(() => dailyStore.list());
   const leads = useStore(() => leadsStore.list());
   const targets = useStore(() => targetsStore.get());
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const weekly = useMemo(() => aggregateByWeek(entries), [entries]);
   const thisKey = currentWeekKey();
@@ -169,7 +171,7 @@ function DashboardPage() {
         </Button>
       </div>
 
-      <TodaySection leads={leads} />
+      {mounted && <TodaySection leads={leads} />}
 
       {!hasData && (
         <Card>
