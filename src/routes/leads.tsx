@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Trash2, Pencil, Plus, Search } from "lucide-react";
+import { LeadRowActions } from "@/components/leads/LeadRowActions";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -183,13 +184,35 @@ function LeadsPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="dateContacted">Date contacted</Label>
+                  <Label htmlFor="dateContacted">First contacted</Label>
                   <Input
                     id="dateContacted"
                     type="date"
                     value={form.dateContacted}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, dateContacted: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="lastContactedAt">Last contacted</Label>
+                  <Input
+                    id="lastContactedAt"
+                    type="date"
+                    value={form.lastContactedAt ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, lastContactedAt: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="nextFollowUpAt">Next follow-up (Da ricontattare)</Label>
+                  <Input
+                    id="nextFollowUpAt"
+                    type="date"
+                    value={form.nextFollowUpAt ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, nextFollowUpAt: e.target.value }))
                     }
                   />
                 </div>
@@ -425,62 +448,77 @@ function LeadsPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>IG</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Stage</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Objection</TableHead>
+                  <TableHead>Last contacted</TableHead>
+                  <TableHead>Next follow-up</TableHead>
+                  <TableHead>Stage</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead>Notes</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((l) => (
-                  <TableRow key={l.id}>
-                    <TableCell className="font-medium">{l.name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {l.igUsername || "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {l.source || "—"}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {format(new Date(l.dateContacted), "MMM d")}
-                    </TableCell>
-                    <TableCell>
-                      {l.contactStage ? (
-                        <Badge variant="secondary" className={STAGE_COLORS[l.contactStage]}>
-                          {l.contactStage}
+                {filtered.map((l) => {
+                  const today = format(new Date(), "yyyy-MM-dd");
+                  const overdue = l.nextFollowUpAt && l.nextFollowUpAt <= today;
+                  return (
+                    <TableRow key={l.id}>
+                      <TableCell className="font-medium">{l.name}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {l.igUsername || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={STATUS_COLORS[l.status]}>
+                          {l.status}
                         </Badge>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={STATUS_COLORS[l.status]}>
-                        {l.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {l.objection === "Other"
-                        ? l.objectionCustom || "Other"
-                        : l.objection || "—"}
-                    </TableCell>
-                    <TableCell className="max-w-[240px] truncate text-sm text-muted-foreground">
-                      {l.notes || l.bestMessage || "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => edit(l)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" onClick={() => remove(l.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                        {l.lastContactedAt ? format(new Date(l.lastContactedAt), "MMM d") : "—"}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm">
+                        {l.nextFollowUpAt ? (
+                          <span
+                            className={
+                              overdue
+                                ? "font-semibold text-rose-600 dark:text-rose-400"
+                                : "text-muted-foreground"
+                            }
+                          >
+                            {format(new Date(l.nextFollowUpAt), "MMM d")}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {l.contactStage ? (
+                          <Badge variant="secondary" className={STAGE_COLORS[l.contactStage]}>
+                            {l.contactStage}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {l.source || "—"}
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
+                        {l.notes || l.bestMessage || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          <LeadRowActions lead={l} compact />
+                          <Button size="icon" variant="ghost" onClick={() => edit(l)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" onClick={() => remove(l.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
