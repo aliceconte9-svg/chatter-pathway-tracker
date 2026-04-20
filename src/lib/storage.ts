@@ -187,8 +187,18 @@ export const dailyStore = {
   },
 };
 
+function migrateLead(l: Lead): Lead {
+  const mapped = LEGACY_STATUS_MAP[l.status as unknown as string];
+  const status = mapped ?? l.status;
+  return {
+    ...l,
+    status,
+    lastContactedAt: l.lastContactedAt ?? l.dateContacted,
+  };
+}
+
 export const leadsStore = {
-  list: () => read<Lead[]>(KEYS.leads, []),
+  list: () => read<Lead[]>(KEYS.leads, []).map(migrateLead),
   save: (leads: Lead[]) => write(KEYS.leads, leads),
   upsert(lead: Lead) {
     const all = leadsStore.list();
@@ -199,6 +209,26 @@ export const leadsStore = {
   },
   remove(id: string) {
     leadsStore.save(leadsStore.list().filter((l) => l.id !== id));
+  },
+  markContacted(id: string) {
+    const all = leadsStore.list();
+    const idx = all.findIndex((l) => l.id === id);
+    if (idx < 0) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const lead = all[idx];
+    all[idx] = {
+      ...lead,
+      lastContactedAt: today,
+      status: lead.status === "New" ? "Contacted" : lead.status,
+    };
+    leadsStore.save(all);
+  },
+  reschedule(id: string, date: string) {
+    const all = leadsStore.list();
+    const idx = all.findIndex((l) => l.id === id);
+    if (idx < 0) return;
+    all[idx] = { ...all[idx], nextFollowUpAt: date };
+    leadsStore.save(all);
   },
 };
 
