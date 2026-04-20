@@ -58,7 +58,9 @@ const emptyForm = (): Lead => ({
   source: "Follower",
   contactStage: "Conversazione iniziata",
   dateContacted: format(new Date(), "yyyy-MM-dd"),
-  status: "Contacted",
+  lastContactedAt: format(new Date(), "yyyy-MM-dd"),
+  nextFollowUpAt: "",
+  status: "New",
   objection: "",
   objectionCustom: "",
   bestMessage: "",
@@ -73,14 +75,14 @@ const STAGE_COLORS: Record<ContactStage, string> = {
 };
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
+  New: "bg-slate-500/15 text-slate-600 dark:text-slate-400",
   Contacted: "bg-muted text-foreground",
   Replied: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-  Convo: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
+  "In Conversation": "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
   Qualified: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
-  Booked: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-  Showed: "bg-orange-500/15 text-orange-600 dark:text-orange-400",
-  Closed: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  Lost: "bg-destructive/15 text-destructive",
+  "Call Booked": "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  "Closed Won": "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  "Closed Lost": "bg-destructive/15 text-destructive",
 };
 
 function LeadsPage() {
