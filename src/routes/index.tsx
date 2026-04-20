@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -12,15 +12,20 @@ import {
   Bar,
   Cell,
 } from "recharts";
-import { TrendingUp, TrendingDown, ArrowRight, AlertCircle, Target } from "lucide-react";
+import { format, differenceInCalendarDays, parseISO } from "date-fns";
+import { TrendingUp, TrendingDown, ArrowRight, AlertCircle, Target, Send, Inbox, AlarmClock } from "lucide-react";
 
 import { findBottleneck } from "@/lib/bottleneck";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
-import { dailyStore, leadsStore, targetsStore } from "@/lib/storage";
+import { dailyStore, leadsStore, targetsStore, type Lead, type LeadStatus } from "@/lib/storage";
 import { useStore } from "@/hooks/use-storage";
+import { LeadRowActions } from "@/components/leads/LeadRowActions";
 import {
   aggregateByWeek,
   currentWeekKey,
@@ -35,11 +40,22 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Dashboard — Chatter Tracker" },
-      { name: "description", content: "Weekly KPIs, trends, funnel and objections." },
+      { name: "description", content: "Today's follow-ups, weekly KPIs, trends, funnel and objections." },
     ],
   }),
   component: DashboardPage,
 });
+
+const STATUS_COLORS: Record<LeadStatus, string> = {
+  New: "bg-slate-500/15 text-slate-600 dark:text-slate-400",
+  Contacted: "bg-muted text-foreground",
+  Replied: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  "In Conversation": "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
+  Qualified: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
+  "Call Booked": "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  "Closed Won": "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  "Closed Lost": "bg-destructive/15 text-destructive",
+};
 
 function DashboardPage() {
   const entries = useStore(() => dailyStore.list());
