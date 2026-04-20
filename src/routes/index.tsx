@@ -169,6 +169,8 @@ function DashboardPage() {
         </Button>
       </div>
 
+      <TodaySection leads={leads} />
+
       {!hasData && (
         <Card>
           <CardContent className="py-10 text-center">
