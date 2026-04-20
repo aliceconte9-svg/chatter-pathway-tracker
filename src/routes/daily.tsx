@@ -80,6 +80,7 @@ function DailyPage() {
   const leadsForDate = leads
     .filter((l) => l.dateContacted === form.date)
     .sort((a, b) => a.name.localeCompare(b.name));
+  const autoDmsForDate = leads.filter((l) => l.lastContactedAt === form.date).length;
 
   function setNum(key: keyof DailyEntry, v: string) {
     const n = Math.max(0, Math.floor(Number(v) || 0));
