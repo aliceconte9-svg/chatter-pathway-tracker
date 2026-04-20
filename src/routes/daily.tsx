@@ -4,11 +4,14 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Trash2, Pencil, Plus } from "lucide-react";
 
+import { Link } from "@tanstack/react-router";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -18,8 +21,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { dailyStore, uid, type DailyEntry } from "@/lib/storage";
+import {
+  dailyStore,
+  leadsStore,
+  uid,
+  type DailyEntry,
+  type ContactStage,
+} from "@/lib/storage";
 import { useStore } from "@/hooks/use-storage";
+
+const STAGE_COLORS: Record<ContactStage, string> = {
+  "Messaggio mandato": "bg-slate-500/15 text-slate-600 dark:text-slate-400",
+  "Conversazione iniziata": "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  "Follow-up mandato": "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  "Da ricontattare": "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+};
 
 export const Route = createFileRoute("/daily")({
   head: () => ({
