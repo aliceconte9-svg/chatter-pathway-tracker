@@ -182,6 +182,58 @@ function DailyPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle className="flex items-center justify-between gap-2 text-base">
+            <span>
+              Leads contacted on {format(new Date(form.date), "EEE, MMM d")} ({leadsForDate.length})
+            </span>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/leads">Add lead</Link>
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto p-0">
+          {leadsForDate.length === 0 ? (
+            <p className="px-6 py-8 text-center text-sm text-muted-foreground">
+              No leads logged for this date yet.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>IG</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Stage</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leadsForDate.map((l) => (
+                  <TableRow key={l.id}>
+                    <TableCell className="font-medium">{l.name}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {l.igUsername ? `@${l.igUsername.replace(/^@/, "")}` : "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{l.source ?? "—"}</TableCell>
+                    <TableCell>
+                      {l.contactStage ? (
+                        <Badge variant="secondary" className={STAGE_COLORS[l.contactStage]}>
+                          {l.contactStage}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{l.status}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
           <CardTitle className="text-base">History ({entries.length})</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
