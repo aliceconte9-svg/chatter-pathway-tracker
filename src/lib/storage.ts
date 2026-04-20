@@ -15,16 +15,25 @@ export type DailyEntry = {
 };
 
 export const LEAD_STATUSES = [
+  "New",
   "Contacted",
   "Replied",
-  "Convo",
+  "In Conversation",
   "Qualified",
-  "Booked",
-  "Showed",
-  "Closed",
-  "Lost",
+  "Call Booked",
+  "Closed Won",
+  "Closed Lost",
 ] as const;
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
+
+// Map legacy statuses to current ones (auto-migration on read)
+const LEGACY_STATUS_MAP: Record<string, LeadStatus> = {
+  Convo: "In Conversation",
+  Booked: "Call Booked",
+  Showed: "Call Booked",
+  Closed: "Closed Won",
+  Lost: "Closed Lost",
+};
 
 export const LEAD_SOURCES = ["Follower", "Storia", "Esplora", "Hashtag", "Referral", "Other"] as const;
 export type LeadSource = (typeof LEAD_SOURCES)[number];
@@ -59,10 +68,13 @@ export type Lead = {
   objectionCustom?: string;
   bestMessage?: string;
   notes?: string;
+  // Follow-up tracking
+  lastContactedAt?: string; // ISO yyyy-MM-dd — auto-updated on "mark contacted"
+  nextFollowUpAt?: string; // ISO yyyy-MM-dd — manually scheduled
   // Advanced metrics (optional)
-  timeToFirstReplyMin?: number; // minutes between DM sent and first reply
-  messagesToBooking?: number; // number of messages exchanged before booking
-  conversationLength?: number; // total message count in the conversation
+  timeToFirstReplyMin?: number;
+  messagesToBooking?: number;
+  conversationLength?: number;
 };
 
 export type Experiment = {
