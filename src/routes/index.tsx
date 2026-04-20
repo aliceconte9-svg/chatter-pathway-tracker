@@ -483,3 +483,170 @@ function BottleneckCard({
     </Card>
   );
 }
+
+function TodaySection({ leads }: { leads: Lead[] }) {
+  const [staleDays, setStaleDays] = useState(2);
+  const today = format(new Date(), "yyyy-MM-dd");
+
+  const dmsToday = useMemo(
+    () => leads.filter((l) => l.lastContactedAt === today).length,
+    [leads, today],
+  );
+
+  const toContact = useMemo(() => {
+    return leads
+      .filter((l) => {
+        if (l.status === "Closed Won" || l.status === "Closed Lost") return false;
+        const isNew = l.status === "New" && !l.lastContactedAt;
+        const dueFollowUp = l.nextFollowUpAt && l.nextFollowUpAt <= today;
+        return isNew || dueFollowUp;
+      })
+      .sort((a, b) => (a.nextFollowUpAt ?? "9999").localeCompare(b.nextFollowUpAt ?? "9999"));
+  }, [leads, today]);
+
+  const stale = useMemo(() => {
+    return leads.filter((l) => {
+      if (l.status !== "Contacted") return false;
+      if (l.nextFollowUpAt) return false;
+      if (!l.lastContactedAt) return false;
+      const days = differenceInCalendarDays(new Date(), parseISO(l.lastContactedAt));
+      return days >= staleDays;
+    });
+  }, [leads, staleDays]);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatCard
+          icon={<Send className="h-4 w-4" />}
+          label="DMs sent today"
+          value={dmsToday}
+          hint="Auto-counted from leads marked contacted today"
+        />
+        <StatCard
+          icon={<Inbox className="h-4 w-4" />}
+          label="To contact today"
+          value={toContact.length}
+          hint="New leads + due follow-ups"
+        />
+        <StatCard
+          icon={<AlarmClock className="h-4 w-4" />}
+          label={`Stale > ${staleDays}d`}
+          value={stale.length}
+          hint="Contacted, no reply, no follow-up set"
+        />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Today's to-do</CardTitle>
+          <CardDescription>
+            Leads to message today — new prospects and scheduled follow-ups.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <LeadsToDoList leads={toContact} emptyMsg="🎉 Nothing pending. Add new leads or schedule follow-ups." />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row flex-wrap items-end justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle className="text-base">Stale leads</CardTitle>
+            <CardDescription>No reply after X days, with no follow-up scheduled.</CardDescription>
+          </div>
+          <div className="flex items-end gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="staleDays" className="text-xs">No reply after (days)</Label>
+              <Input
+                id="staleDays"
+                type="number"
+                min={1}
+                value={staleDays}
+                onChange={(e) => setStaleDays(Math.max(1, Number(e.target.value) || 1))}
+                className="w-24"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <LeadsToDoList leads={stale} emptyMsg="No stale leads — nicely kept up." />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  hint: string;
+}) {
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+          {icon}
+          {label}
+        </div>
+        <div className="mt-1 text-3xl font-bold tabular-nums">{value}</div>
+        <div className="mt-0.5 text-xs text-muted-foreground">{hint}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LeadsToDoList({ leads, emptyMsg }: { leads: Lead[]; emptyMsg: string }) {
+  if (leads.length === 0) {
+    return <p className="px-6 py-8 text-center text-sm text-muted-foreground">{emptyMsg}</p>;
+  }
+  const today = format(new Date(), "yyyy-MM-dd");
+  return (
+    <ul className="divide-y divide-border">
+      {leads.map((l) => {
+        const overdue = l.nextFollowUpAt && l.nextFollowUpAt < today;
+        const dueToday = l.nextFollowUpAt === today;
+        return (
+          <li key={l.id} className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{l.name}</span>
+                {l.igUsername && (
+                  <span className="text-xs text-muted-foreground">@{l.igUsername.replace(/^@/, "")}</span>
+                )}
+                <Badge variant="secondary" className={STATUS_COLORS[l.status]}>
+                  {l.status}
+                </Badge>
+                {overdue && (
+                  <Badge variant="secondary" className="bg-destructive/15 text-destructive">
+                    Overdue
+                  </Badge>
+                )}
+                {dueToday && (
+                  <Badge variant="secondary" className="bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                    Today
+                  </Badge>
+                )}
+              </div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                Last contacted:{" "}
+                {l.lastContactedAt ? format(new Date(l.lastContactedAt), "MMM d") : "never"}
+                {l.nextFollowUpAt && (
+                  <> · Follow-up: {format(new Date(l.nextFollowUpAt), "MMM d")}</>
+                )}
+              </div>
+            </div>
+            <LeadRowActions lead={l} compact />
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
