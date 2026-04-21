@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Trash2, Pencil, Plus, Search } from "lucide-react";
 import { LeadRowActions } from "@/components/leads/LeadRowActions";
+import { TagInput, TagFilter } from "@/components/leads/TagInput";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
