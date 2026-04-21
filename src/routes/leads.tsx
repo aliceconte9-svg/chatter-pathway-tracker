@@ -519,6 +519,16 @@ function LeadsPage() {
                       <TableCell className="text-sm text-muted-foreground">
                         {l.source || "—"}
                       </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {(l.tags ?? []).map((t) => (
+                            <Badge key={t} variant="outline" className="text-xs">
+                              {t}
+                            </Badge>
+                          ))}
+                          {!(l.tags ?? []).length && <span className="text-muted-foreground">—</span>}
+                        </div>
+                      </TableCell>
                       <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
                         {l.notes || l.bestMessage || "—"}
                       </TableCell>
