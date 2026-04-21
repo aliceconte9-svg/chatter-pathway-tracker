@@ -516,7 +516,7 @@ function TodaySection({ leads }: { leads: Lead[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard
           icon={<Send className="h-4 w-4" />}
           label="New Leads"
