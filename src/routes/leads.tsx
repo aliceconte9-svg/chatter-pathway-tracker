@@ -317,9 +317,6 @@ function LeadsPage() {
                   </div>
                 )}
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="bestMessage">Best message used</Label>
-              </div>
               <div className="space-y-1.5 sm:col-span-2">
                 <Label>Tags</Label>
                 <TagInput
