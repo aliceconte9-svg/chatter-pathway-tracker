@@ -451,6 +451,7 @@ function LeadsPage() {
               </SelectContent>
             </Select>
           </div>
+          <TagFilter value={tagFilter} onChange={setTagFilter} />
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           {filtered.length === 0 ? (
