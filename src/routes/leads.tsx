@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Trash2, Pencil, Plus, Search } from "lucide-react";
 import { LeadRowActions } from "@/components/leads/LeadRowActions";
+import { TagInput, TagFilter } from "@/components/leads/TagInput";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ const emptyForm = (): Lead => ({
   nextFollowUpAt: "",
   status: "New",
   objection: "",
+  tags: [],
   objectionCustom: "",
   bestMessage: "",
   notes: "",
@@ -93,6 +95,7 @@ function LeadsPage() {
   const [showForm, setShowForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -100,12 +103,17 @@ function LeadsPage() {
       .filter((l) => statusFilter === "all" || l.status === statusFilter)
       .filter(
         (l) =>
+          tagFilter.length === 0 ||
+          tagFilter.some((t) => (l.tags ?? []).includes(t)),
+      )
+      .filter(
+        (l) =>
           !search ||
           l.name.toLowerCase().includes(q) ||
           (l.igUsername ?? "").toLowerCase().includes(q),
       )
       .sort((a, b) => b.dateContacted.localeCompare(a.dateContacted));
-  }, [leads, statusFilter, search]);
+  }, [leads, statusFilter, search, tagFilter]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -309,6 +317,13 @@ function LeadsPage() {
                   </div>
                 )}
               </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Tags</Label>
+                <TagInput
+                  value={form.tags ?? []}
+                  onChange={(tags) => setForm((f) => ({ ...f, tags }))}
+                />
+              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="bestMessage">Best message used</Label>
                 <Textarea
@@ -436,6 +451,7 @@ function LeadsPage() {
               </SelectContent>
             </Select>
           </div>
+          <TagFilter value={tagFilter} onChange={setTagFilter} />
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           {filtered.length === 0 ? (
@@ -453,6 +469,7 @@ function LeadsPage() {
                   <TableHead>Next follow-up</TableHead>
                   <TableHead>Stage</TableHead>
                   <TableHead>Source</TableHead>
+                  <TableHead>Tags</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -501,6 +518,16 @@ function LeadsPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {l.source || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {(l.tags ?? []).map((t) => (
+                            <Badge key={t} variant="outline" className="text-xs">
+                              {t}
+                            </Badge>
+                          ))}
+                          {!(l.tags ?? []).length && <span className="text-muted-foreground">—</span>}
+                        </div>
                       </TableCell>
                       <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
                         {l.notes || l.bestMessage || "—"}

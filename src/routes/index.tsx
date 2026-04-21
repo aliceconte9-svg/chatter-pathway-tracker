@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
 import { dailyStore, leadsStore, targetsStore, type Lead, type LeadStatus } from "@/lib/storage";
+import { activityStore } from "@/lib/activity";
 import { useStore } from "@/hooks/use-storage";
 import { LeadRowActions } from "@/components/leads/LeadRowActions";
 import {
@@ -490,10 +491,7 @@ function TodaySection({ leads }: { leads: Lead[] }) {
   const [staleDays, setStaleDays] = useState(2);
   const today = format(new Date(), "yyyy-MM-dd");
 
-  const dmsToday = useMemo(
-    () => leads.filter((l) => l.lastContactedAt === today).length,
-    [leads, today],
-  );
+  const todayActivity = useStore(() => activityStore.forDate(today));
 
   const toContact = useMemo(() => {
     return leads
@@ -518,18 +516,36 @@ function TodaySection({ leads }: { leads: Lead[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard
           icon={<Send className="h-4 w-4" />}
-          label="DMs sent today"
-          value={dmsToday}
-          hint="Auto-counted from leads marked contacted today"
+          label="New Leads"
+          value={todayActivity.newLeads}
+          hint="Added today"
+        />
+        <StatCard
+          icon={<Send className="h-4 w-4" />}
+          label="DMs Sent"
+          value={todayActivity.contacted}
+          hint="Contacted today"
+        />
+        <StatCard
+          icon={<Inbox className="h-4 w-4" />}
+          label="Convos"
+          value={todayActivity.conversationsStarted}
+          hint="Conversations started"
         />
         <StatCard
           icon={<Inbox className="h-4 w-4" />}
           label="To contact today"
           value={toContact.length}
           hint="New leads + due follow-ups"
+        />
+        <StatCard
+          icon={<AlarmClock className="h-4 w-4" />}
+          label="Booked"
+          value={todayActivity.callsBooked}
+          hint="Calls booked today"
         />
         <StatCard
           icon={<AlarmClock className="h-4 w-4" />}
