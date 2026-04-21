@@ -95,6 +95,7 @@ function LeadsPage() {
   const [showForm, setShowForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -102,12 +103,17 @@ function LeadsPage() {
       .filter((l) => statusFilter === "all" || l.status === statusFilter)
       .filter(
         (l) =>
+          tagFilter.length === 0 ||
+          tagFilter.some((t) => (l.tags ?? []).includes(t)),
+      )
+      .filter(
+        (l) =>
           !search ||
           l.name.toLowerCase().includes(q) ||
           (l.igUsername ?? "").toLowerCase().includes(q),
       )
       .sort((a, b) => b.dateContacted.localeCompare(a.dateContacted));
-  }, [leads, statusFilter, search]);
+  }, [leads, statusFilter, search, tagFilter]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
