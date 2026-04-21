@@ -174,57 +174,59 @@ function DashboardPage() {
 
       {mounted && <TodaySection leads={leads} />}
 
-      {mounted && !hasData && (
-        <Card>
-          <CardContent className="py-10 text-center">
-            <h2 className="text-lg font-semibold">Nothing tracked yet</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Start logging your daily DMs, replies and calls to see your numbers come alive.
-            </p>
-            <div className="mt-4 flex justify-center gap-2">
-              <Button asChild>
-                <Link to="/daily">Add first entry</Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/settings">Set targets</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {mounted && (
+        <>
+          {!hasData && (
+            <Card>
+              <CardContent className="py-10 text-center">
+                <h2 className="text-lg font-semibold">Nothing tracked yet</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Start logging your daily DMs, replies and calls to see your numbers come alive.
+                </p>
+                <div className="mt-4 flex justify-center gap-2">
+                  <Button asChild>
+                    <Link to="/daily">Add first entry</Link>
+                  </Button>
+                  <Button variant="outline" asChild>
+                    <Link to="/settings">Set targets</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-      {/* KPI cards */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi
-          label="DMs"
-          value={thisWeek.dms}
-          target={targets.dms}
-          format={(v) => v.toString()}
-        />
-        <Kpi
-          label="Reply rate"
-          value={replyRate}
-          target={targets.replyRate}
-          format={(v) => `${v.toFixed(1)}%`}
-          rawSub={`${thisWeek.replies} / ${thisWeek.dms}`}
-        />
-        <Kpi
-          label="Calls booked"
-          value={thisWeek.booked}
-          target={targets.booked}
-          format={(v) => v.toString()}
-          rawSub={`Booking rate ${fmtPct(thisWeek.booked, thisWeek.qualified)}`}
-        />
-        <Kpi
-          label="Sales closed"
-          value={thisWeek.sales}
-          target={targets.sales}
-          format={(v) => v.toString()}
-          rawSub={`Close rate ${fmtPct(thisWeek.sales, thisWeek.showed)}`}
-        />
-      </div>
+          {/* KPI cards */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Kpi
+              label="DMs"
+              value={thisWeek.dms}
+              target={targets.dms}
+              format={(v) => v.toString()}
+            />
+            <Kpi
+              label="Reply rate"
+              value={replyRate}
+              target={targets.replyRate}
+              format={(v) => `${v.toFixed(1)}%`}
+              rawSub={`${thisWeek.replies} / ${thisWeek.dms}`}
+            />
+            <Kpi
+              label="Calls booked"
+              value={thisWeek.booked}
+              target={targets.booked}
+              format={(v) => v.toString()}
+              rawSub={`Booking rate ${fmtPct(thisWeek.booked, thisWeek.qualified)}`}
+            />
+            <Kpi
+              label="Sales closed"
+              value={thisWeek.sales}
+              target={targets.sales}
+              format={(v) => v.toString()}
+              rawSub={`Close rate ${fmtPct(thisWeek.sales, thisWeek.showed)}`}
+            />
+          </div>
 
-      {hasData && <BottleneckCard week={thisWeek} targets={targets} />}
+          {hasData && <BottleneckCard week={thisWeek} targets={targets} />}
 
       {hints.length > 0 && (
         <Card className="border-amber-500/30 bg-amber-500/5">
