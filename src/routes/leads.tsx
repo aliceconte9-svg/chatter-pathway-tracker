@@ -328,7 +328,7 @@ function LeadsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="bestMessage2">Best message used</Label>
+                <Label htmlFor="bestMessage">Best message used</Label>
                 <Textarea
                   id="bestMessage"
                   rows={2}
