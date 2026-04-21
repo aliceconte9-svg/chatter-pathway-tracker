@@ -319,6 +319,16 @@ function LeadsPage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="bestMessage">Best message used</Label>
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Tags</Label>
+                <TagInput
+                  value={form.tags ?? []}
+                  onChange={(tags) => setForm((f) => ({ ...f, tags }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="bestMessage2">Best message used</Label>
                 <Textarea
                   id="bestMessage"
                   rows={2}
