@@ -469,6 +469,7 @@ function LeadsPage() {
                   <TableHead>Next follow-up</TableHead>
                   <TableHead>Stage</TableHead>
                   <TableHead>Source</TableHead>
+                  <TableHead>Tags</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
