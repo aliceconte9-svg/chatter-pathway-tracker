@@ -64,6 +64,7 @@ const emptyForm = (): Lead => ({
   nextFollowUpAt: "",
   status: "New",
   objection: "",
+  tags: [],
   objectionCustom: "",
   bestMessage: "",
   notes: "",
