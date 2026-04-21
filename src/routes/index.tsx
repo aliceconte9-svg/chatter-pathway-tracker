@@ -491,10 +491,7 @@ function TodaySection({ leads }: { leads: Lead[] }) {
   const [staleDays, setStaleDays] = useState(2);
   const today = format(new Date(), "yyyy-MM-dd");
 
-  const dmsToday = useMemo(
-    () => leads.filter((l) => l.lastContactedAt === today).length,
-    [leads, today],
-  );
+  const todayActivity = useStore(() => activityStore.forDate(today));
 
   const toContact = useMemo(() => {
     return leads
