@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
-import { leadsStore, targetsStore, type Lead, type LeadStatus } from "@/lib/storage";
+import { dailyStore, leadsStore, targetsStore, type Lead, type LeadStatus } from "@/lib/storage";
 import { activityStore } from "@/lib/activity";
 import { useStore } from "@/hooks/use-storage";
 import { LeadRowActions } from "@/components/leads/LeadRowActions";
