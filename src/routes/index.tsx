@@ -174,7 +174,7 @@ function DashboardPage() {
 
       {mounted && <TodaySection leads={leads} />}
 
-      {!hasData && (
+      {mounted && !hasData && (
         <Card>
           <CardContent className="py-10 text-center">
             <h2 className="text-lg font-semibold">Nothing tracked yet</h2>
