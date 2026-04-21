@@ -204,9 +204,16 @@ export const leadsStore = {
   upsert(lead: Lead) {
     const all = leadsStore.list();
     const idx = all.findIndex((l) => l.id === lead.id);
-    if (idx >= 0) all[idx] = lead;
-    else all.push(lead);
+    if (idx >= 0) {
+      const old = all[idx];
+      all[idx] = lead;
+      leadsStore.save(all);
+      _trackStatusChange(old, lead);
+      return;
+    }
+    all.push(lead);
     leadsStore.save(all);
+    _recordActivity(lead.id, "new_lead");
   },
   remove(id: string) {
     leadsStore.save(leadsStore.list().filter((l) => l.id !== id));
@@ -223,6 +230,7 @@ export const leadsStore = {
       status: lead.status === "New" ? "Contacted" : lead.status,
     };
     leadsStore.save(all);
+    _recordActivity(id, "contacted");
   },
   reschedule(id: string, date: string) {
     const all = leadsStore.list();
@@ -232,6 +240,23 @@ export const leadsStore = {
     leadsStore.save(all);
   },
 };
+
+function _recordActivity(leadId: string, event: string) {
+  import("@/lib/activity").then(({ activityStore }) => {
+    activityStore.record(leadId, event as any);
+  });
+}
+
+function _trackStatusChange(oldLead: Lead, newLead: Lead) {
+  if (oldLead.status === newLead.status) return;
+  const s = newLead.status;
+  if (s === "Replied" || s === "In Conversation") {
+    _recordActivity(newLead.id, "conversation_started");
+  }
+  if (s === "Qualified") _recordActivity(newLead.id, "qualified");
+  if (s === "Call Booked") _recordActivity(newLead.id, "call_booked");
+  if (s === "Closed Won") _recordActivity(newLead.id, "closed_won");
+}
 
 export const targetsStore = {
   get: () => read<Targets>(KEYS.targets, DEFAULT_TARGETS),
