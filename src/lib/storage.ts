@@ -68,6 +68,7 @@ export type Lead = {
   objectionCustom?: string;
   bestMessage?: string;
   notes?: string;
+  tags?: string[];
   // Follow-up tracking
   lastContactedAt?: string; // ISO yyyy-MM-dd — auto-updated on "mark contacted"
   nextFollowUpAt?: string; // ISO yyyy-MM-dd — manually scheduled
