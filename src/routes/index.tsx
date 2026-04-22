@@ -554,6 +554,7 @@ function BottleneckCard({
 
 function TodaySection({ leads }: { leads: Lead[] }) {
   const [staleDays, setStaleDays] = useState(2);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const today = format(new Date(), "yyyy-MM-dd");
 
   const todayActivity = useStore(() => activityStore.forDate(today));
@@ -628,7 +629,7 @@ function TodaySection({ leads }: { leads: Lead[] }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <LeadsToDoList leads={toContact} emptyMsg="🎉 Nothing pending. Add new leads or schedule follow-ups." />
+          <LeadsToDoList leads={toContact} emptyMsg="🎉 Nothing pending. Add new leads or schedule follow-ups." onSelectLead={setSelectedLead} />
         </CardContent>
       </Card>
 
@@ -653,9 +654,15 @@ function TodaySection({ leads }: { leads: Lead[] }) {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <LeadsToDoList leads={stale} emptyMsg="No stale leads — nicely kept up." />
+          <LeadsToDoList leads={stale} emptyMsg="No stale leads — nicely kept up." onSelectLead={setSelectedLead} />
         </CardContent>
       </Card>
+
+      <Sheet open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
+        <SheetContent className="overflow-y-auto sm:max-w-md">
+          {selectedLead && <LeadDetailPanel lead={selectedLead} />}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -699,7 +706,13 @@ function LeadsToDoList({ leads, emptyMsg, onSelectLead }: { leads: Lead[]; empty
           <li key={l.id} className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">{l.name}</span>
+                <button
+                  type="button"
+                  className="font-medium text-left hover:underline hover:text-primary transition-colors"
+                  onClick={() => onSelectLead?.(l)}
+                >
+                  {l.name}
+                </button>
                 {l.igUsername && (
                   <span className="text-xs text-muted-foreground">@{l.igUsername.replace(/^@/, "")}</span>
                 )}
