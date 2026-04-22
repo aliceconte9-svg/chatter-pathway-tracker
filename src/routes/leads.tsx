@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { format } from "date-fns";
-import { toast } from "sonner";
-import { Trash2, Pencil, Plus, Search } from "lucide-react";
+import { toast } from "sonner"; 
+import { Trash2, Pencil, Plus, Search, Flame, AlertTriangle } from "lucide-react";
 import { LeadRowActions } from "@/components/leads/LeadRowActions";
 import { TagInput, TagFilter } from "@/components/leads/TagInput";
 
@@ -42,6 +42,7 @@ import {
   type Objection,
 } from "@/lib/storage";
 import { useStore } from "@/hooks/use-storage";
+import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/leads")({
   head: () => ({
@@ -68,6 +69,9 @@ const emptyForm = (): Lead => ({
   objectionCustom: "",
   bestMessage: "",
   notes: "",
+  hotLead: false,
+  openerUsed: "",
+  followUpCount: 0,
 });
 
 const STAGE_COLORS: Record<ContactStage, string> = {
@@ -96,11 +100,29 @@ function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string[]>([]);
+  const [hotFilter, setHotFilter] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState<Lead | null>(null);
+
+  // Duplicate detection: check IG username as user types
+  useEffect(() => {
+    const username = (form.igUsername ?? "").trim().toLowerCase().replace(/^@/, "");
+    if (!username || editing) {
+      setDuplicateWarning(null);
+      return;
+    }
+    const dup = leads.find(
+      (l) =>
+        l.id !== form.id &&
+        (l.igUsername ?? "").trim().toLowerCase().replace(/^@/, "") === username,
+    );
+    setDuplicateWarning(dup ?? null);
+  }, [form.igUsername, leads, form.id, editing]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return leads
       .filter((l) => statusFilter === "all" || l.status === statusFilter)
+      .filter((l) => !hotFilter || l.hotLead)
       .filter(
         (l) =>
           tagFilter.length === 0 ||
@@ -120,6 +142,12 @@ function LeadsPage() {
     if (!form.name.trim()) {
       toast.error("Name is required");
       return;
+    }
+    // Block duplicates unless user confirms
+    if (duplicateWarning && !editing) {
+      if (!confirm(`A lead with IG username "${form.igUsername}" already exists (${duplicateWarning.name}). Add anyway?`)) {
+        return;
+      }
     }
     leadsStore.upsert(form);
     toast.success(editing ? "Lead updated" : "Lead added");
@@ -191,6 +219,12 @@ function LeadsPage() {
                     placeholder="@handle"
                   />
                 </div>
+              {duplicateWarning && (
+                <div className="sm:col-span-2 flex items-center gap-2 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                  <span>Duplicate found: <strong>{duplicateWarning.name}</strong> (@{duplicateWarning.igUsername}) — Status: {duplicateWarning.status}</span>
+                </div>
+              )}
                 <div className="space-y-1.5">
                   <Label htmlFor="dateContacted">First contacted</Label>
                   <Input
@@ -302,6 +336,26 @@ function LeadsPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="openerUsed">Opener used</Label>
+                  <Input
+                    id="openerUsed"
+                    value={form.openerUsed ?? ""}
+                    onChange={(e) => setForm((f) => ({ ...f, openerUsed: e.target.value }))}
+                    placeholder="e.g. Compliment opener, Story reply..."
+                  />
+                </div>
+                <div className="flex items-center gap-3 pt-5">
+                  <Switch
+                    id="hotLead"
+                    checked={form.hotLead ?? false}
+                    onCheckedChange={(v) => setForm((f) => ({ ...f, hotLead: v }))}
+                  />
+                  <Label htmlFor="hotLead" className="flex items-center gap-1.5 cursor-pointer">
+                    <Flame className="h-4 w-4 text-orange-500" />
+                    Hot Lead
+                  </Label>
                 </div>
                 {form.objection === "Other" && (
                   <div className="space-y-1.5 sm:col-span-2">
@@ -450,6 +504,15 @@ function LeadsPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Button
+              variant={hotFilter ? "default" : "outline"}
+              size="sm"
+              onClick={() => setHotFilter((f) => !f)}
+              className="gap-1"
+            >
+              <Flame className="h-3.5 w-3.5" />
+              Hot
+            </Button>
           </div>
           <TagFilter value={tagFilter} onChange={setTagFilter} />
         </CardHeader>
@@ -462,13 +525,17 @@ function LeadsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8"></TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>IG</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Last contacted</TableHead>
+                  <TableHead>Days ago</TableHead>
+                  <TableHead>Follow-ups</TableHead>
                   <TableHead>Next follow-up</TableHead>
                   <TableHead>Stage</TableHead>
                   <TableHead>Source</TableHead>
+                  <TableHead>Opener</TableHead>
                   <TableHead>Tags</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -480,6 +547,9 @@ function LeadsPage() {
                   const overdue = l.nextFollowUpAt && l.nextFollowUpAt <= today;
                   return (
                     <TableRow key={l.id}>
+                      <TableCell>
+                        {l.hotLead && <Flame className="h-4 w-4 text-orange-500" />}
+                      </TableCell>
                       <TableCell className="font-medium">{l.name}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {l.igUsername || "—"}
@@ -491,6 +561,14 @@ function LeadsPage() {
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                         {l.lastContactedAt ? format(new Date(l.lastContactedAt), "MMM d") : "—"}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm tabular-nums text-muted-foreground">
+                        {l.lastContactedAt
+                          ? Math.max(0, Math.floor((Date.now() - new Date(l.lastContactedAt).getTime()) / 86400000))
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm tabular-nums text-muted-foreground">
+                        {l.followUpCount ?? 0}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-sm">
                         {l.nextFollowUpAt ? (
@@ -518,6 +596,9 @@ function LeadsPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {l.source || "—"}
+                      </TableCell>
+                      <TableCell className="max-w-[120px] truncate text-sm text-muted-foreground">
+                        {l.openerUsed || "—"}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">

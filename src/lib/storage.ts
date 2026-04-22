@@ -72,6 +72,10 @@ export type Lead = {
   // Follow-up tracking
   lastContactedAt?: string; // ISO yyyy-MM-dd — auto-updated on "mark contacted"
   nextFollowUpAt?: string; // ISO yyyy-MM-dd — manually scheduled
+  // Counters & flags
+  followUpCount?: number; // auto-incremented on subsequent contacts (not first)
+  hotLead?: boolean; // manually toggled hot lead flag
+  openerUsed?: string; // which opener/message template was used
   // Advanced metrics (optional)
   timeToFirstReplyMin?: number;
   messagesToBooking?: number;
@@ -224,10 +228,12 @@ export const leadsStore = {
     if (idx < 0) return;
     const today = new Date().toISOString().slice(0, 10);
     const lead = all[idx];
+    const isFollowUp = lead.status !== "New";
     all[idx] = {
       ...lead,
       lastContactedAt: today,
       status: lead.status === "New" ? "Contacted" : lead.status,
+      followUpCount: isFollowUp ? (lead.followUpCount ?? 0) + 1 : (lead.followUpCount ?? 0),
     };
     leadsStore.save(all);
     _recordActivity(id, "contacted");
