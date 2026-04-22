@@ -504,6 +504,15 @@ function LeadsPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Button
+              variant={hotFilter ? "default" : "outline"}
+              size="sm"
+              onClick={() => setHotFilter((f) => !f)}
+              className="gap-1"
+            >
+              <Flame className="h-3.5 w-3.5" />
+              Hot
+            </Button>
           </div>
           <TagFilter value={tagFilter} onChange={setTagFilter} />
         </CardHeader>
@@ -516,13 +525,17 @@ function LeadsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8"></TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>IG</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Last contacted</TableHead>
+                  <TableHead>Days ago</TableHead>
+                  <TableHead>Follow-ups</TableHead>
                   <TableHead>Next follow-up</TableHead>
                   <TableHead>Stage</TableHead>
                   <TableHead>Source</TableHead>
+                  <TableHead>Opener</TableHead>
                   <TableHead>Tags</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -534,6 +547,9 @@ function LeadsPage() {
                   const overdue = l.nextFollowUpAt && l.nextFollowUpAt <= today;
                   return (
                     <TableRow key={l.id}>
+                      <TableCell>
+                        {l.hotLead && <Flame className="h-4 w-4 text-orange-500" />}
+                      </TableCell>
                       <TableCell className="font-medium">{l.name}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {l.igUsername || "—"}
@@ -545,6 +561,14 @@ function LeadsPage() {
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                         {l.lastContactedAt ? format(new Date(l.lastContactedAt), "MMM d") : "—"}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm tabular-nums text-muted-foreground">
+                        {l.lastContactedAt
+                          ? Math.max(0, Math.floor((Date.now() - new Date(l.lastContactedAt).getTime()) / 86400000))
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm tabular-nums text-muted-foreground">
+                        {l.followUpCount ?? 0}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-sm">
                         {l.nextFollowUpAt ? (
@@ -572,6 +596,9 @@ function LeadsPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {l.source || "—"}
+                      </TableCell>
+                      <TableCell className="max-w-[120px] truncate text-sm text-muted-foreground">
+                        {l.openerUsed || "—"}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
