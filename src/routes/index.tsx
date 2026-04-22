@@ -13,7 +13,7 @@ import {
   Cell,
 } from "recharts";
 import { format, differenceInCalendarDays, parseISO } from "date-fns";
-import { TrendingUp, TrendingDown, ArrowRight, AlertCircle, Target, Send, Inbox, AlarmClock } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRight, AlertCircle, Target, Send, Inbox, AlarmClock, Flame } from "lucide-react";
 
 import { findBottleneck } from "@/lib/bottleneck";
 
@@ -176,6 +176,9 @@ function DashboardPage() {
 
       {mounted && (
         <>
+          {/* Lead-based funnel conversion KPIs */}
+          <LeadFunnelKpis leads={leads} />
+
           {!hasData && (
             <Card>
               <CardContent className="py-10 text-center">
