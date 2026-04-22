@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -27,6 +27,7 @@ import { dailyStore, leadsStore, targetsStore, type Lead, type LeadStatus } from
 import { activityStore } from "@/lib/activity";
 import { useStore } from "@/hooks/use-storage";
 import { LeadRowActions } from "@/components/leads/LeadRowActions";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   aggregateByWeek,
   currentWeekKey,
@@ -684,8 +685,7 @@ function StatCard({
   );
 }
 
-function LeadsToDoList({ leads, emptyMsg }: { leads: Lead[]; emptyMsg: string }) {
-
+function LeadsToDoList({ leads, emptyMsg, onSelectLead }: { leads: Lead[]; emptyMsg: string; onSelectLead?: (lead: Lead) => void }) {
   if (leads.length === 0) {
     return <p className="px-6 py-8 text-center text-sm text-muted-foreground">{emptyMsg}</p>;
   }
