@@ -233,6 +233,10 @@ export const leadsStore = {
       ...lead,
       lastContactedAt: today,
       status: lead.status === "New" ? "Contacted" : lead.status,
+      contactStage:
+        lead.contactStage === "Messaggio mandato"
+          ? "Follow-up mandato"
+          : lead.contactStage,
       followUpCount: isFollowUp ? (lead.followUpCount ?? 0) + 1 : (lead.followUpCount ?? 0),
     };
     leadsStore.save(all);

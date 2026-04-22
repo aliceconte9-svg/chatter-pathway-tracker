@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -27,6 +27,7 @@ import { dailyStore, leadsStore, targetsStore, type Lead, type LeadStatus } from
 import { activityStore } from "@/lib/activity";
 import { useStore } from "@/hooks/use-storage";
 import { LeadRowActions } from "@/components/leads/LeadRowActions";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   aggregateByWeek,
   currentWeekKey,
@@ -553,6 +554,7 @@ function BottleneckCard({
 
 function TodaySection({ leads }: { leads: Lead[] }) {
   const [staleDays, setStaleDays] = useState(2);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const today = format(new Date(), "yyyy-MM-dd");
 
   const todayActivity = useStore(() => activityStore.forDate(today));
@@ -627,7 +629,7 @@ function TodaySection({ leads }: { leads: Lead[] }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <LeadsToDoList leads={toContact} emptyMsg="🎉 Nothing pending. Add new leads or schedule follow-ups." />
+          <LeadsToDoList leads={toContact} emptyMsg="🎉 Nothing pending. Add new leads or schedule follow-ups." onSelectLead={setSelectedLead} />
         </CardContent>
       </Card>
 
@@ -652,9 +654,15 @@ function TodaySection({ leads }: { leads: Lead[] }) {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <LeadsToDoList leads={stale} emptyMsg="No stale leads — nicely kept up." />
+          <LeadsToDoList leads={stale} emptyMsg="No stale leads — nicely kept up." onSelectLead={setSelectedLead} />
         </CardContent>
       </Card>
+
+      <Sheet open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
+        <SheetContent className="overflow-y-auto sm:max-w-md">
+          {selectedLead && <LeadDetailPanel lead={selectedLead} />}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -684,8 +692,101 @@ function StatCard({
   );
 }
 
-function LeadsToDoList({ leads, emptyMsg }: { leads: Lead[]; emptyMsg: string }) {
+function LeadDetailPanel({ lead }: { lead: Lead }) {
+  const ig = lead.igUsername?.replace(/^@/, "");
+  return (
+    <>
+      <SheetHeader>
+        <SheetTitle>{lead.name}</SheetTitle>
+      </SheetHeader>
+      <div className="mt-4 space-y-4 text-sm">
+        {ig && (
+          <div>
+            <span className="text-muted-foreground">Instagram: </span>
+            <a href={`https://instagram.com/${ig}`} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+              @{ig}
+            </a>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase">Status</span>
+            <Badge variant="secondary" className={STATUS_COLORS[lead.status]}>{lead.status}</Badge>
+          </div>
+          {lead.contactStage && (
+            <div>
+              <span className="text-muted-foreground block text-xs uppercase">Contact Stage</span>
+              <span>{lead.contactStage}</span>
+            </div>
+          )}
+          {lead.source && (
+            <div>
+              <span className="text-muted-foreground block text-xs uppercase">Source</span>
+              <span>{lead.source}</span>
+            </div>
+          )}
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase">Date Contacted</span>
+            <span>{lead.lastContactedAt ? format(parseISO(lead.lastContactedAt), "MMM d, yyyy") : lead.dateContacted}</span>
+          </div>
+          {lead.nextFollowUpAt && (
+            <div>
+              <span className="text-muted-foreground block text-xs uppercase">Next Follow-up</span>
+              <span>{format(parseISO(lead.nextFollowUpAt), "MMM d, yyyy")}</span>
+            </div>
+          )}
+          {(lead.followUpCount ?? 0) > 0 && (
+            <div>
+              <span className="text-muted-foreground block text-xs uppercase">Follow-ups</span>
+              <span>{lead.followUpCount}</span>
+            </div>
+          )}
+          {lead.hotLead && (
+            <div>
+              <Badge variant="secondary" className="bg-orange-500/15 text-orange-600">
+                <Flame className="mr-1 h-3 w-3" /> Hot Lead
+              </Badge>
+            </div>
+          )}
+        </div>
+        {lead.openerUsed && (
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase">Opener Used</span>
+            <span>{lead.openerUsed}</span>
+          </div>
+        )}
+        {lead.objection && (
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase">Objection</span>
+            <span>{lead.objection === "Other" ? lead.objectionCustom || "Other" : lead.objection}</span>
+          </div>
+        )}
+        {lead.tags && lead.tags.length > 0 && (
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase mb-1">Tags</span>
+            <div className="flex flex-wrap gap-1">
+              {lead.tags.map((t) => (
+                <Badge key={t} variant="outline">{t}</Badge>
+              ))}
+            </div>
+          </div>
+        )}
+        {lead.notes && (
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase">Notes</span>
+            <p className="whitespace-pre-wrap">{lead.notes}</p>
+          </div>
+        )}
+        <div className="pt-2">
+          <LeadRowActions lead={lead} />
+        </div>
+      </div>
+    </>
+  );
+}
 
+
+function LeadsToDoList({ leads, emptyMsg, onSelectLead }: { leads: Lead[]; emptyMsg: string; onSelectLead?: (lead: Lead) => void }) {
   if (leads.length === 0) {
     return <p className="px-6 py-8 text-center text-sm text-muted-foreground">{emptyMsg}</p>;
   }
@@ -699,7 +800,13 @@ function LeadsToDoList({ leads, emptyMsg }: { leads: Lead[]; emptyMsg: string })
           <li key={l.id} className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">{l.name}</span>
+                <button
+                  type="button"
+                  className="font-medium text-left hover:underline hover:text-primary transition-colors"
+                  onClick={() => onSelectLead?.(l)}
+                >
+                  {l.name}
+                </button>
                 {l.igUsername && (
                   <span className="text-xs text-muted-foreground">@{l.igUsername.replace(/^@/, "")}</span>
                 )}
