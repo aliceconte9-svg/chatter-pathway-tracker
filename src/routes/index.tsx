@@ -692,6 +692,100 @@ function StatCard({
   );
 }
 
+function LeadDetailPanel({ lead }: { lead: Lead }) {
+  const ig = lead.igUsername?.replace(/^@/, "");
+  return (
+    <>
+      <SheetHeader>
+        <SheetTitle>{lead.name}</SheetTitle>
+      </SheetHeader>
+      <div className="mt-4 space-y-4 text-sm">
+        {ig && (
+          <div>
+            <span className="text-muted-foreground">Instagram: </span>
+            <a href={`https://instagram.com/${ig}`} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+              @{ig}
+            </a>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase">Status</span>
+            <Badge variant="secondary" className={STATUS_COLORS[lead.status]}>{lead.status}</Badge>
+          </div>
+          {lead.contactStage && (
+            <div>
+              <span className="text-muted-foreground block text-xs uppercase">Contact Stage</span>
+              <span>{lead.contactStage}</span>
+            </div>
+          )}
+          {lead.source && (
+            <div>
+              <span className="text-muted-foreground block text-xs uppercase">Source</span>
+              <span>{lead.source}</span>
+            </div>
+          )}
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase">Date Contacted</span>
+            <span>{lead.lastContactedAt ? format(parseISO(lead.lastContactedAt), "MMM d, yyyy") : lead.dateContacted}</span>
+          </div>
+          {lead.nextFollowUpAt && (
+            <div>
+              <span className="text-muted-foreground block text-xs uppercase">Next Follow-up</span>
+              <span>{format(parseISO(lead.nextFollowUpAt), "MMM d, yyyy")}</span>
+            </div>
+          )}
+          {(lead.followUpCount ?? 0) > 0 && (
+            <div>
+              <span className="text-muted-foreground block text-xs uppercase">Follow-ups</span>
+              <span>{lead.followUpCount}</span>
+            </div>
+          )}
+          {lead.hotLead && (
+            <div>
+              <Badge variant="secondary" className="bg-orange-500/15 text-orange-600">
+                <Flame className="mr-1 h-3 w-3" /> Hot Lead
+              </Badge>
+            </div>
+          )}
+        </div>
+        {lead.openerUsed && (
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase">Opener Used</span>
+            <span>{lead.openerUsed}</span>
+          </div>
+        )}
+        {lead.objection && (
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase">Objection</span>
+            <span>{lead.objection === "Other" ? lead.objectionCustom || "Other" : lead.objection}</span>
+          </div>
+        )}
+        {lead.tags && lead.tags.length > 0 && (
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase mb-1">Tags</span>
+            <div className="flex flex-wrap gap-1">
+              {lead.tags.map((t) => (
+                <Badge key={t} variant="outline">{t}</Badge>
+              ))}
+            </div>
+          </div>
+        )}
+        {lead.notes && (
+          <div>
+            <span className="text-muted-foreground block text-xs uppercase">Notes</span>
+            <p className="whitespace-pre-wrap">{lead.notes}</p>
+          </div>
+        )}
+        <div className="pt-2">
+          <LeadRowActions lead={lead} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+
 function LeadsToDoList({ leads, emptyMsg, onSelectLead }: { leads: Lead[]; emptyMsg: string; onSelectLead?: (lead: Lead) => void }) {
   if (leads.length === 0) {
     return <p className="px-6 py-8 text-center text-sm text-muted-foreground">{emptyMsg}</p>;
