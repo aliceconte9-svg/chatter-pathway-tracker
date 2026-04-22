@@ -58,6 +58,63 @@ const STATUS_COLORS: Record<LeadStatus, string> = {
   "Closed Lost": "bg-destructive/15 text-destructive",
 };
 
+function LeadFunnelKpis({ leads }: { leads: Lead[] }) {
+  const contacted = leads.filter((l) => l.status !== "New").length;
+  const replied = leads.filter((l) =>
+    ["Replied", "In Conversation", "Qualified", "Call Booked", "Closed Won", "Closed Lost"].includes(l.status),
+  ).length;
+  const qualified = leads.filter((l) =>
+    ["Qualified", "Call Booked", "Closed Won", "Closed Lost"].includes(l.status),
+  ).length;
+  const booked = leads.filter((l) =>
+    ["Call Booked", "Closed Won", "Closed Lost"].includes(l.status),
+  ).length;
+  const won = leads.filter((l) => l.status === "Closed Won").length;
+  const hotCount = leads.filter((l) => l.hotLead).length;
+
+  const replyRate = contacted > 0 ? (replied / contacted) * 100 : 0;
+  const bookingRate = qualified > 0 ? (booked / qualified) * 100 : 0;
+  const closeRate = booked > 0 ? (won / booked) * 100 : 0;
+
+  if (leads.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Lead Funnel Conversion</CardTitle>
+        <CardDescription>All-time rates calculated from lead statuses</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border p-3">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Reply Rate</div>
+            <div className="mt-1 text-2xl font-bold tabular-nums">{replyRate.toFixed(1)}%</div>
+            <div className="text-xs text-muted-foreground">{replied} / {contacted} contacted</div>
+          </div>
+          <div className="rounded-lg border p-3">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Booking Rate</div>
+            <div className="mt-1 text-2xl font-bold tabular-nums">{bookingRate.toFixed(1)}%</div>
+            <div className="text-xs text-muted-foreground">{booked} / {qualified} qualified</div>
+          </div>
+          <div className="rounded-lg border p-3">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Close Rate</div>
+            <div className="mt-1 text-2xl font-bold tabular-nums">{closeRate.toFixed(1)}%</div>
+            <div className="text-xs text-muted-foreground">{won} / {booked} booked</div>
+          </div>
+          <div className="rounded-lg border p-3">
+            <div className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+              <Flame className="h-3.5 w-3.5 text-orange-500" />
+              Hot Leads
+            </div>
+            <div className="mt-1 text-2xl font-bold tabular-nums">{hotCount}</div>
+            <div className="text-xs text-muted-foreground">of {leads.length} total</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function DashboardPage() {
   const entries = useStore(() => dailyStore.list());
   const leads = useStore(() => leadsStore.list());
