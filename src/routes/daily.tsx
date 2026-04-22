@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -36,13 +37,56 @@ const METRICS = [
 
 type DayAgg = ReturnType<typeof activityStore.forDate>;
 
+function getAvg7(allEvents: ReturnType<typeof activityStore.list>, today: string): DayAgg {
+  const days: string[] = [];
+  for (let i = 1; i <= 7; i++) {
+    days.push(format(subDays(new Date(today), i), "yyyy-MM-dd"));
+  }
+  const totals: DayAgg = { newLeads: 0, contacted: 0, conversationsStarted: 0, qualified: 0, callsBooked: 0, sales: 0 };
+  const keys = Object.keys(totals) as (keyof DayAgg)[];
+  let activeDays = 0;
+  for (const d of days) {
+    const s = activityStore.forDate(d);
+    const hasActivity = keys.some((k) => s[k] > 0);
+    if (hasActivity) activeDays++;
+    for (const k of keys) totals[k] += s[k];
+  }
+  if (activeDays > 0) {
+    for (const k of keys) totals[k] = Math.round((totals[k] / activeDays) * 10) / 10;
+  }
+  return totals;
+}
+
+function ComparisonBadge({ current, previous, avg }: { current: number; previous: number; avg: number }) {
+  const vsPrev = previous > 0 ? current - previous : null;
+  const vsAvg = avg > 0 ? current - avg : null;
+
+  return (
+    <div className="mt-1 flex flex-col items-center gap-0.5">
+      {vsPrev !== null && (
+        <span className={`text-[10px] font-medium ${vsPrev > 0 ? "text-green-600 dark:text-green-400" : vsPrev < 0 ? "text-red-500 dark:text-red-400" : "text-muted-foreground"}`}>
+          {vsPrev > 0 ? "▲" : vsPrev < 0 ? "▼" : "="} {Math.abs(vsPrev)} vs ieri
+        </span>
+      )}
+      {vsAvg !== null && (
+        <span className={`text-[10px] font-medium ${vsAvg > 0 ? "text-green-600 dark:text-green-400" : vsAvg < 0 ? "text-red-500 dark:text-red-400" : "text-muted-foreground"}`}>
+          {vsAvg > 0 ? "▲" : vsAvg < 0 ? "▼" : "="} {Math.abs(Math.round(vsAvg))} vs avg 7g
+        </span>
+      )}
+    </div>
+  );
+}
+
 function DailyPage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const dates = useStore(() => activityStore.allDates());
   const today = format(new Date(), "yyyy-MM-dd");
+  const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
   const todayStats = useStore(() => activityStore.forDate(today));
+  const yesterdayStats = useStore(() => activityStore.forDate(yesterday));
+  const avg7 = useMemo(() => getAvg7([], today), [today]);
 
   const rows = useMemo(() => {
     return dates.map((date) => ({
@@ -65,12 +109,17 @@ function DailyPage() {
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {METRICS.map((m) => (
           <Card key={m.key}>
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 text-center">
               <div className="text-2xl">{m.emoji}</div>
               <div className="mt-1 text-2xl font-bold tabular-nums">
                 {todayStats[m.key as keyof DayAgg]}
               </div>
               <div className="mt-0.5 text-xs text-muted-foreground">{m.label}</div>
+              <ComparisonBadge
+                current={todayStats[m.key as keyof DayAgg]}
+                previous={yesterdayStats[m.key as keyof DayAgg]}
+                avg={avg7[m.key as keyof DayAgg]}
+              />
             </CardContent>
           </Card>
         ))}
