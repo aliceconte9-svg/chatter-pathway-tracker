@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { toast } from "sonner";
 import {
   ResponsiveContainer,
   LineChart,
@@ -20,7 +21,6 @@ import { findBottleneck } from "@/lib/bottleneck";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
 import {
@@ -689,7 +689,7 @@ function TodaySection({ leads }: { leads: Lead[] }) {
 
       <Sheet open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
         <SheetContent className="overflow-y-auto sm:max-w-md">
-          {selectedLead && <LeadDetailPanel lead={selectedLead} />}
+          {selectedLead && <LeadDetailPanel lead={selectedLead} onClose={() => setSelectedLead(null)} />}
         </SheetContent>
       </Sheet>
     </div>
