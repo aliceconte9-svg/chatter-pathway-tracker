@@ -563,6 +563,8 @@ function TodaySection({ leads }: { leads: Lead[] }) {
     return leads
       .filter((l) => {
         if (l.status === "Closed Won" || l.status === "Closed Lost") return false;
+        // Exclude leads that already had follow-up 1 sent
+        if (l.contactStage === "Follow-up 1 mandato" || l.contactStage === "Follow-up 2 mandato") return false;
         const isNew = l.status === "New" && !l.lastContactedAt;
         const dueFollowUp = l.nextFollowUpAt && l.nextFollowUpAt <= today;
         return isNew || dueFollowUp;
