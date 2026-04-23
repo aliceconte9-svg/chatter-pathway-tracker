@@ -14,7 +14,7 @@ import {
   Cell,
 } from "recharts";
 import { format, differenceInCalendarDays, parseISO } from "date-fns";
-import { TrendingUp, TrendingDown, ArrowRight, AlertCircle, Target, Send, Inbox, AlarmClock, Flame } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRight, AlertCircle, Target, Send, Inbox, AlarmClock, Flame, MessageCircle } from "lucide-react";
 
 import { findBottleneck } from "@/lib/bottleneck";
 
@@ -599,6 +599,26 @@ function TodaySection({ leads }: { leads: Lead[] }) {
       .sort((a, b) => (a.nextFollowUpAt ?? "9999").localeCompare(b.nextFollowUpAt ?? "9999"));
   }, [leads, today]);
 
+  // Follow-up 1 Today: leads contacted yesterday with stage "Messaggio mandato"
+  const yesterday = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return format(d, "yyyy-MM-dd");
+  }, []);
+
+  const followUp1Today = useMemo(() => {
+    return leads.filter((l) => {
+      if (l.status === "Closed Won" || l.status === "Closed Lost") return false;
+      // Must not already be at follow-up stage
+      if (l.contactStage === "Follow-up 1 mandato" || l.contactStage === "Follow-up 2 mandato") return false;
+      // First contact was yesterday (dateContacted = yesterday and followUpCount = 0)
+      const firstContactYesterday = l.dateContacted === yesterday && (l.followUpCount ?? 0) === 0;
+      // Or last contacted yesterday and it was the first contact
+      const lastContactedYesterday = l.lastContactedAt === yesterday && l.dateContacted === l.lastContactedAt;
+      return firstContactYesterday || lastContactedYesterday;
+    });
+  }, [leads, yesterday]);
+
   const stale = useMemo(() => {
     return leads.filter((l) => {
       if (l.status !== "Contacted") return false;
@@ -649,6 +669,21 @@ function TodaySection({ leads }: { leads: Lead[] }) {
           hint="Contacted, no reply, no follow-up set"
         />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MessageCircle className="h-4 w-4" />
+            Follow-up 1 Today
+          </CardTitle>
+          <CardDescription>
+            Leads contacted yesterday — send follow-up 1 today.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <LeadsToDoList leads={followUp1Today} emptyMsg="✅ No follow-up 1 needed today." onSelectLead={setSelectedLead} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
