@@ -14,6 +14,7 @@ import { Route as TimeRouteImport } from './routes/time'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PlaybookRouteImport } from './routes/playbook'
 import { Route as LeadsRouteImport } from './routes/leads'
+import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as ExperimentsRouteImport } from './routes/experiments'
 import { Route as DailyRouteImport } from './routes/daily'
 import { Route as IndexRouteImport } from './routes/index'
@@ -43,6 +44,11 @@ const LeadsRoute = LeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InsightsRoute = InsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExperimentsRoute = ExperimentsRouteImport.update({
   id: '/experiments',
   path: '/experiments',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/daily': typeof DailyRoute
   '/experiments': typeof ExperimentsRoute
+  '/insights': typeof InsightsRoute
   '/leads': typeof LeadsRoute
   '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/daily': typeof DailyRoute
   '/experiments': typeof ExperimentsRoute
+  '/insights': typeof InsightsRoute
   '/leads': typeof LeadsRoute
   '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/daily': typeof DailyRoute
   '/experiments': typeof ExperimentsRoute
+  '/insights': typeof InsightsRoute
   '/leads': typeof LeadsRoute
   '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/daily'
     | '/experiments'
+    | '/insights'
     | '/leads'
     | '/playbook'
     | '/settings'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/daily'
     | '/experiments'
+    | '/insights'
     | '/leads'
     | '/playbook'
     | '/settings'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/daily'
     | '/experiments'
+    | '/insights'
     | '/leads'
     | '/playbook'
     | '/settings'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DailyRoute: typeof DailyRoute
   ExperimentsRoute: typeof ExperimentsRoute
+  InsightsRoute: typeof InsightsRoute
   LeadsRoute: typeof LeadsRoute
   PlaybookRoute: typeof PlaybookRoute
   SettingsRoute: typeof SettingsRoute
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeadsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/insights': {
+      id: '/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/experiments': {
       id: '/experiments'
       path: '/experiments'
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DailyRoute: DailyRoute,
   ExperimentsRoute: ExperimentsRoute,
+  InsightsRoute: InsightsRoute,
   LeadsRoute: LeadsRoute,
   PlaybookRoute: PlaybookRoute,
   SettingsRoute: SettingsRoute,
