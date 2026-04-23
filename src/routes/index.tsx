@@ -23,11 +23,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
-import { dailyStore, leadsStore, targetsStore, type Lead, type LeadStatus } from "@/lib/storage";
+import {
+  dailyStore, leadsStore, targetsStore,
+  LEAD_STATUSES, LEAD_SOURCES, CONTACT_STAGES, OBJECTIONS,
+  type Lead, type LeadStatus, type LeadSource, type ContactStage, type Objection,
+} from "@/lib/storage";
 import { activityStore } from "@/lib/activity";
 import { useStore } from "@/hooks/use-storage";
 import { LeadRowActions } from "@/components/leads/LeadRowActions";
+import { TagInput } from "@/components/leads/TagInput";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   aggregateByWeek,
   currentWeekKey,
@@ -706,14 +721,27 @@ function StatCard({
   );
 }
 
-function LeadDetailPanel({ lead }: { lead: Lead }) {
-  const ig = lead.igUsername?.replace(/^@/, "");
+function LeadDetailPanel({ lead, onClose }: { lead: Lead; onClose: () => void }) {
+  const [form, setForm] = useState<Lead>({ ...lead });
+  const ig = form.igUsername?.replace(/^@/, "");
+
+  // Sync form when a different lead is selected
+  useEffect(() => {
+    setForm({ ...lead });
+  }, [lead.id]);
+
+  function save() {
+    leadsStore.upsert(form);
+    toast.success("Lead updated");
+    onClose();
+  }
+
   return (
     <>
       <SheetHeader>
-        <SheetTitle>{lead.name}</SheetTitle>
+        <SheetTitle>Edit Lead</SheetTitle>
       </SheetHeader>
-      <div className="mt-4 space-y-4 text-sm">
+      <div className="mt-4 space-y-4 text-sm max-h-[calc(100vh-120px)] overflow-y-auto">
         {ig && (
           <div>
             <span className="text-muted-foreground">Instagram: </span>
@@ -722,77 +750,78 @@ function LeadDetailPanel({ lead }: { lead: Lead }) {
             </a>
           </div>
         )}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <span className="text-muted-foreground block text-xs uppercase">Status</span>
-            <Badge variant="secondary" className={STATUS_COLORS[lead.status]}>{lead.status}</Badge>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Name</Label>
+            <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
           </div>
-          {lead.contactStage && (
-            <div>
-              <span className="text-muted-foreground block text-xs uppercase">Contact Stage</span>
-              <span>{lead.contactStage}</span>
-            </div>
-          )}
-          {lead.source && (
-            <div>
-              <span className="text-muted-foreground block text-xs uppercase">Source</span>
-              <span>{lead.source}</span>
-            </div>
-          )}
-          <div>
-            <span className="text-muted-foreground block text-xs uppercase">Date Contacted</span>
-            <span>{lead.lastContactedAt ? format(parseISO(lead.lastContactedAt), "MMM d, yyyy") : lead.dateContacted}</span>
+          <div className="space-y-1.5">
+            <Label>IG Username</Label>
+            <Input value={form.igUsername ?? ""} onChange={(e) => setForm((f) => ({ ...f, igUsername: e.target.value }))} />
           </div>
-          {lead.nextFollowUpAt && (
-            <div>
-              <span className="text-muted-foreground block text-xs uppercase">Next Follow-up</span>
-              <span>{format(parseISO(lead.nextFollowUpAt), "MMM d, yyyy")}</span>
-            </div>
-          )}
-          {(lead.followUpCount ?? 0) > 0 && (
-            <div>
-              <span className="text-muted-foreground block text-xs uppercase">Follow-ups</span>
-              <span>{lead.followUpCount}</span>
-            </div>
-          )}
-          {lead.hotLead && (
-            <div>
-              <Badge variant="secondary" className="bg-orange-500/15 text-orange-600">
-                <Flame className="mr-1 h-3 w-3" /> Hot Lead
-              </Badge>
-            </div>
-          )}
-        </div>
-        {lead.openerUsed && (
-          <div>
-            <span className="text-muted-foreground block text-xs uppercase">Opener Used</span>
-            <span>{lead.openerUsed}</span>
+          <div className="space-y-1.5">
+            <Label>Status</Label>
+            <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v as LeadStatus }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {LEAD_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
-        )}
-        {lead.objection && (
-          <div>
-            <span className="text-muted-foreground block text-xs uppercase">Objection</span>
-            <span>{lead.objection === "Other" ? lead.objectionCustom || "Other" : lead.objection}</span>
+          <div className="space-y-1.5">
+            <Label>Contact Stage</Label>
+            <Select value={form.contactStage ?? ""} onValueChange={(v) => setForm((f) => ({ ...f, contactStage: v as ContactStage }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CONTACT_STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
-        )}
-        {lead.tags && lead.tags.length > 0 && (
-          <div>
-            <span className="text-muted-foreground block text-xs uppercase mb-1">Tags</span>
-            <div className="flex flex-wrap gap-1">
-              {lead.tags.map((t) => (
-                <Badge key={t} variant="outline">{t}</Badge>
-              ))}
-            </div>
+          <div className="space-y-1.5">
+            <Label>Source</Label>
+            <Select value={form.source ?? "Follower"} onValueChange={(v) => setForm((f) => ({ ...f, source: v as LeadSource }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {LEAD_SOURCES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
-        )}
-        {lead.notes && (
-          <div>
-            <span className="text-muted-foreground block text-xs uppercase">Notes</span>
-            <p className="whitespace-pre-wrap">{lead.notes}</p>
+          <div className="space-y-1.5">
+            <Label>Objection</Label>
+            <Select value={form.objection || "none"} onValueChange={(v) => setForm((f) => ({ ...f, objection: (v === "none" ? "" : v) as Objection }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {OBJECTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
-        )}
-        <div className="pt-2">
-          <LeadRowActions lead={lead} />
+          <div className="space-y-1.5">
+            <Label>Opener Used</Label>
+            <Input value={form.openerUsed ?? ""} onChange={(e) => setForm((f) => ({ ...f, openerUsed: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Next Follow-up</Label>
+            <Input type="date" value={form.nextFollowUpAt ?? ""} onChange={(e) => setForm((f) => ({ ...f, nextFollowUpAt: e.target.value }))} />
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch id="hotLeadPanel" checked={form.hotLead ?? false} onCheckedChange={(v) => setForm((f) => ({ ...f, hotLead: v }))} />
+            <Label htmlFor="hotLeadPanel" className="flex items-center gap-1.5 cursor-pointer">
+              <Flame className="h-4 w-4 text-orange-500" /> Hot Lead
+            </Label>
+          </div>
+          <div>
+            <Label>Tags</Label>
+            <TagInput value={form.tags ?? []} onChange={(tags) => setForm((f) => ({ ...f, tags }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Notes</Label>
+            <Textarea rows={3} value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button onClick={save}>Save</Button>
+            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          </div>
         </div>
       </div>
     </>
