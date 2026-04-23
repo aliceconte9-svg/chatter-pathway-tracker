@@ -103,6 +103,13 @@ function LeadsPage() {
   const [tagFilter, setTagFilter] = useState<string[]>([]);
   const [hotFilter, setHotFilter] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<Lead | null>(null);
+  const [stageFilter, setStageFilter] = useState<string>("all");
+  const [lastContactedFrom, setLastContactedFrom] = useState("");
+  const [lastContactedTo, setLastContactedTo] = useState("");
+  const [firstContactFrom, setFirstContactFrom] = useState("");
+  const [firstContactTo, setFirstContactTo] = useState("");
+  const [nextFollowUpFrom, setNextFollowUpFrom] = useState("");
+  const [nextFollowUpTo, setNextFollowUpTo] = useState("");
 
   // Duplicate detection: check IG username as user types
   useEffect(() => {
@@ -123,6 +130,7 @@ function LeadsPage() {
     const q = search.toLowerCase();
     return leads
       .filter((l) => statusFilter === "all" || l.status === statusFilter)
+      .filter((l) => stageFilter === "all" || l.contactStage === stageFilter)
       .filter((l) => !hotFilter || l.hotLead)
       .filter(
         (l) =>
@@ -135,8 +143,17 @@ function LeadsPage() {
           l.name.toLowerCase().includes(q) ||
           (l.igUsername ?? "").toLowerCase().includes(q),
       )
+      .filter((l) => {
+        if (lastContactedFrom && (!l.lastContactedAt || l.lastContactedAt < lastContactedFrom)) return false;
+        if (lastContactedTo && (!l.lastContactedAt || l.lastContactedAt > lastContactedTo)) return false;
+        if (firstContactFrom && l.dateContacted < firstContactFrom) return false;
+        if (firstContactTo && l.dateContacted > firstContactTo) return false;
+        if (nextFollowUpFrom && (!l.nextFollowUpAt || l.nextFollowUpAt < nextFollowUpFrom)) return false;
+        if (nextFollowUpTo && (!l.nextFollowUpAt || l.nextFollowUpAt > nextFollowUpTo)) return false;
+        return true;
+      })
       .sort((a, b) => b.dateContacted.localeCompare(a.dateContacted));
-  }, [leads, statusFilter, search, tagFilter]);
+  }, [leads, statusFilter, stageFilter, search, tagFilter, hotFilter, lastContactedFrom, lastContactedTo, firstContactFrom, firstContactTo, nextFollowUpFrom, nextFollowUpTo]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -505,6 +522,19 @@ function LeadsPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={stageFilter} onValueChange={setStageFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All stages</SelectItem>
+                {CONTACT_STAGES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
               variant={hotFilter ? "default" : "outline"}
               size="sm"
@@ -516,6 +546,37 @@ function LeadsPage() {
             </Button>
           </div>
           <TagFilter value={tagFilter} onChange={setTagFilter} />
+          <div className="flex flex-wrap items-end gap-3 text-xs">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Last contacted</Label>
+              <div className="flex items-center gap-1">
+                <Input type="date" value={lastContactedFrom} onChange={(e) => setLastContactedFrom(e.target.value)} className="h-8 w-[130px] text-xs" />
+                <span className="text-muted-foreground">→</span>
+                <Input type="date" value={lastContactedTo} onChange={(e) => setLastContactedTo(e.target.value)} className="h-8 w-[130px] text-xs" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">First contact</Label>
+              <div className="flex items-center gap-1">
+                <Input type="date" value={firstContactFrom} onChange={(e) => setFirstContactFrom(e.target.value)} className="h-8 w-[130px] text-xs" />
+                <span className="text-muted-foreground">→</span>
+                <Input type="date" value={firstContactTo} onChange={(e) => setFirstContactTo(e.target.value)} className="h-8 w-[130px] text-xs" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Next follow-up</Label>
+              <div className="flex items-center gap-1">
+                <Input type="date" value={nextFollowUpFrom} onChange={(e) => setNextFollowUpFrom(e.target.value)} className="h-8 w-[130px] text-xs" />
+                <span className="text-muted-foreground">→</span>
+                <Input type="date" value={nextFollowUpTo} onChange={(e) => setNextFollowUpTo(e.target.value)} className="h-8 w-[130px] text-xs" />
+              </div>
+            </div>
+            {(lastContactedFrom || lastContactedTo || firstContactFrom || firstContactTo || nextFollowUpFrom || nextFollowUpTo) && (
+              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setLastContactedFrom(""); setLastContactedTo(""); setFirstContactFrom(""); setFirstContactTo(""); setNextFollowUpFrom(""); setNextFollowUpTo(""); }}>
+                Clear dates
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           {filtered.length === 0 ? (
