@@ -73,6 +73,13 @@ function LeadFunnelKpis({ leads }: { leads: Lead[] }) {
   const won = leads.filter((l) => l.status === "Closed Won").length;
   const hotCount = leads.filter((l) => l.hotLead).length;
 
+  // Reply without follow-up %
+  const repliedNoFollowUp = leads.filter((l) => {
+    const hasReplied = ["Replied", "In Conversation", "Qualified", "Call Booked", "Closed Won", "Closed Lost"].includes(l.status);
+    return hasReplied && (l.followUpCount ?? 0) === 0;
+  }).length;
+  const replyNoFuRate = contacted > 0 ? (repliedNoFollowUp / contacted) * 100 : 0;
+
   const replyRate = contacted > 0 ? (replied / contacted) * 100 : 0;
   const bookingRate = qualified > 0 ? (booked / qualified) * 100 : 0;
   const closeRate = booked > 0 ? (won / booked) * 100 : 0;
@@ -109,6 +116,11 @@ function LeadFunnelKpis({ leads }: { leads: Lead[] }) {
             </div>
             <div className="mt-1 text-2xl font-bold tabular-nums">{hotCount}</div>
             <div className="text-xs text-muted-foreground">of {leads.length} total</div>
+          </div>
+          <div className="rounded-lg border p-3">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Reply w/o Follow-up</div>
+            <div className="mt-1 text-2xl font-bold tabular-nums">{replyNoFuRate.toFixed(1)}%</div>
+            <div className="text-xs text-muted-foreground">{repliedNoFollowUp} / {contacted} contacted</div>
           </div>
         </div>
       </CardContent>
