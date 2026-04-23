@@ -41,7 +41,8 @@ export type LeadSource = (typeof LEAD_SOURCES)[number];
 export const CONTACT_STAGES = [
   "Messaggio mandato",
   "Conversazione iniziata",
-  "Follow-up mandato",
+  "Follow-up 1 mandato",
+  "Follow-up 2 mandato",
   "Da ricontattare",
 ] as const;
 export type ContactStage = (typeof CONTACT_STAGES)[number];
@@ -193,11 +194,17 @@ export const dailyStore = {
 };
 
 function migrateLead(l: Lead): Lead {
+  // Migrate legacy contact stages
+  let contactStage = l.contactStage;
+  if (contactStage === ("Follow-up mandato" as any)) {
+    contactStage = "Follow-up 1 mandato";
+  }
   const mapped = LEGACY_STATUS_MAP[l.status as unknown as string];
   const status = mapped ?? l.status;
   return {
     ...l,
     status,
+    contactStage,
     lastContactedAt: l.lastContactedAt ?? l.dateContacted,
   };
 }
@@ -235,8 +242,10 @@ export const leadsStore = {
       status: lead.status === "New" ? "Contacted" : lead.status,
       contactStage:
         lead.contactStage === "Messaggio mandato"
-          ? "Follow-up mandato"
-          : lead.contactStage,
+          ? "Follow-up 1 mandato"
+          : lead.contactStage === "Follow-up 1 mandato"
+            ? "Follow-up 2 mandato"
+            : lead.contactStage,
       followUpCount: isFollowUp ? (lead.followUpCount ?? 0) + 1 : (lead.followUpCount ?? 0),
     };
     leadsStore.save(all);
@@ -258,7 +267,19 @@ function _recordActivity(leadId: string, event: string) {
 }
 
 function _trackStatusChange(oldLead: Lead, newLead: Lead) {
-  if (oldLead.status === newLead.status) return;
+  const statusChanged = oldLead.status !== newLead.status;
+  const stageChanged = oldLead.contactStage !== newLead.contactStage;
+  // Auto-update lastContactedAt on status or stage change
+  if (statusChanged || stageChanged) {
+    const today = new Date().toISOString().slice(0, 10);
+    const all = leadsStore.list();
+    const idx = all.findIndex((l) => l.id === newLead.id);
+    if (idx >= 0 && all[idx].lastContactedAt !== today) {
+      all[idx] = { ...all[idx], lastContactedAt: today };
+      leadsStore.save(all);
+    }
+  }
+  if (!statusChanged) return;
   const s = newLead.status;
   if (s === "Replied" || s === "In Conversation") {
     _recordActivity(newLead.id, "conversation_started");
