@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -82,7 +82,7 @@ const CONTENT_TEMPLATES = [
 function InsightsPage() {
   const leads = useStore(() => leadsStore.list());
   const [mounted, setMounted] = useState(false);
-  useState(() => setMounted(true));
+  useEffect(() => setMounted(true), []);
 
   const problems = useMemo(() => extractPatterns(leads, PROBLEM_KEYWORDS), [leads]);
   const goals = useMemo(() => extractPatterns(leads, GOAL_KEYWORDS), [leads]);
