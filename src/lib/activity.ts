@@ -1,6 +1,8 @@
 // Automatic activity tracking — records lead events for the daily tracker.
 // Each event is recorded once per lead per stage.
 
+import { cloudSync } from "./storage";
+
 export type ActivityEventType =
   | "new_lead"
   | "contacted"
@@ -31,6 +33,7 @@ function write(events: ActivityEvent[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(KEY, JSON.stringify(events));
   window.dispatchEvent(new CustomEvent("chatter:storage"));
+  void cloudSync.push(KEY, events);
 }
 
 export const activityStore = {
