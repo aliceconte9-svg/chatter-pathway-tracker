@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 
 import { dailyStore, targetsStore } from "@/lib/storage";
+import { activityStore } from "@/lib/activity";
 import { useStore } from "@/hooks/use-storage";
 import { aggregateByWeek, weekLabel, pct, fmtPct } from "@/lib/week";
 import { cn } from "@/lib/utils";
@@ -64,7 +65,10 @@ function countCell(value: number, target: number) {
 }
 
 function WeeklyPage() {
-  const entries = useStore(() => dailyStore.list());
+  const entries = useStore(() => {
+    const activityEntries = activityStore.toDailyEntries();
+    return activityEntries.length > 0 ? activityEntries : dailyStore.list();
+  });
   const targets = useStore(() => targetsStore.get());
   const weeks = useMemo(() => aggregateByWeek(entries).reverse(), [entries]);
 

@@ -1,6 +1,7 @@
 // Automatic activity tracking — records lead events for the daily tracker.
 // Each event is recorded once per lead per stage.
 
+import type { DailyEntry } from "./storage";
 import { cloudSync } from "./storage";
 
 export type ActivityEventType =
@@ -39,6 +40,14 @@ function write(events: ActivityEvent[]) {
 export const activityStore = {
   list: () => read(),
 
+  clear() {
+    write([]);
+  },
+
+  replace(events: ActivityEvent[]) {
+    write(events);
+  },
+
   /** Record an event — deduplicates by leadId + event type (only once per stage per lead) */
   record(leadId: string, event: ActivityEventType) {
     const all = read();
@@ -66,5 +75,26 @@ export const activityStore = {
   allDates(): string[] {
     const dates = new Set(read().map((e) => e.date));
     return [...dates].sort((a, b) => b.localeCompare(a));
+  },
+
+  toDailyEntries(): DailyEntry[] {
+    return this.allDates()
+      .slice()
+      .reverse()
+      .map((date) => {
+        const stats = this.forDate(date);
+        return {
+          id: date,
+          date,
+          dms: stats.contacted,
+          replies: stats.conversationsStarted,
+          convos: stats.conversationsStarted,
+          qualified: stats.qualified,
+          booked: stats.callsBooked,
+          showed: 0,
+          sales: stats.sales,
+          note: "",
+        };
+      });
   },
 };
