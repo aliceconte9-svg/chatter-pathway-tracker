@@ -201,7 +201,7 @@ export const cloudSync = {
       const { data, error } = await supabase.from("app_data" as any).select("key,value");
       if (error) throw error;
       if (!data) return;
-      for (const row of data as Array<{ key: string; value: unknown }>) {
+      for (const row of data as unknown as Array<{ key: string; value: unknown }>) {
         if (Object.values(KEYS).includes(row.key)) {
           localStorage.setItem(row.key, JSON.stringify(row.value));
         }
