@@ -96,10 +96,7 @@ function SettingsPage() {
     }
 
     const events = rebuildActivityFromLeads(leads);
-    activityStore.clear();
-    for (const event of events) {
-      activityStore.record(event.leadId, event.event);
-    }
+    activityStore.replace(events);
 
     const dailyByDate = new Map<string, ReturnType<typeof dailyStore.list>[number]>();
     for (const event of events) {
