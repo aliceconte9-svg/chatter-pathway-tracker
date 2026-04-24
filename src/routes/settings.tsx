@@ -13,8 +13,12 @@ import {
   DEFAULT_TARGETS,
   exportAll,
   importAll,
+  leadsStore,
+  dailyStore,
+  rebuildActivityFromLeads,
   type Targets,
 } from "@/lib/storage";
+import { activityStore } from "@/lib/activity";
 import { useStore } from "@/hooks/use-storage";
 
 export const Route = createFileRoute("/settings")({
@@ -82,6 +86,50 @@ function SettingsPage() {
       }
     };
     reader.readAsText(file);
+  }
+
+  function rebuildDataFromCurrentLeads() {
+    const leads = leadsStore.list();
+    if (leads.length === 0) {
+      toast.error("No leads available to rebuild data");
+      return;
+    }
+
+    const events = rebuildActivityFromLeads(leads);
+    activityStore.clear();
+    for (const event of events) {
+      activityStore.record(event.leadId, event.event);
+    }
+
+    const dailyByDate = new Map<string, ReturnType<typeof dailyStore.list>[number]>();
+    for (const event of events) {
+      const current = dailyByDate.get(event.date) ?? {
+        id: event.date,
+        date: event.date,
+        dms: 0,
+        replies: 0,
+        convos: 0,
+        qualified: 0,
+        booked: 0,
+        showed: 0,
+        sales: 0,
+        note: "",
+      };
+
+      if (event.event === "contacted") current.dms += 1;
+      if (event.event === "conversation_started") {
+        current.replies += 1;
+        current.convos += 1;
+      }
+      if (event.event === "qualified") current.qualified += 1;
+      if (event.event === "call_booked") current.booked += 1;
+      if (event.event === "closed_won") current.sales += 1;
+
+      dailyByDate.set(event.date, current);
+    }
+
+    dailyStore.save([...dailyByDate.values()].sort((a, b) => a.date.localeCompare(b.date)));
+    toast.success("Rebuilt dashboard data from current leads");
   }
 
   return (
@@ -158,6 +206,21 @@ function SettingsPage() {
               }}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Repair data</CardTitle>
+          <CardDescription>
+            Rebuild daily metrics from the leads currently saved in the app when dashboard totals are out of sync.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" onClick={rebuildDataFromCurrentLeads}>
+            <RotateCcw className="h-4 w-4" />
+            Rebuild metrics from leads
+          </Button>
         </CardContent>
       </Card>
     </div>
