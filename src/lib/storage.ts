@@ -159,6 +159,8 @@ const KEYS = {
   experiments: "chatter:experiments",
   playbook: "chatter:playbook",
   time: "chatter:time",
+  activity: "chatter:activity",
+  tags: "chatter:tags",
   activeTimer: "chatter:activeTimer",
 };
 
@@ -180,7 +182,7 @@ function write<T>(key: string, value: T) {
   void cloudSync.push(key, value);
 }
 
-// ===== Cloud sync layer (Supabase) =====
+// ===== Cloud sync layer =====
 // Single-user mode: data stored in public.app_data keyed by storage key.
 // localStorage is used as a synchronous cache; cloud is the source of truth.
 
