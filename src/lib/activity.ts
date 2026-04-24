@@ -39,6 +39,10 @@ function write(events: ActivityEvent[]) {
 export const activityStore = {
   list: () => read(),
 
+  clear() {
+    write([]);
+  },
+
   /** Record an event — deduplicates by leadId + event type (only once per stage per lead) */
   record(leadId: string, event: ActivityEventType) {
     const all = read();
