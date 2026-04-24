@@ -563,6 +563,42 @@ export function importAll(data: ReturnType<typeof exportAll>) {
   if (data.time) timeStore.save(data.time);
 }
 
+export function rebuildActivityFromLeads(leads: Lead[]) {
+  return leads.flatMap((lead) => {
+    const date = lead.dateContacted;
+    const events: Array<{ leadId: string; date: string; event: import("@/lib/activity").ActivityEventType }> = [
+      { leadId: lead.id, date, event: "new_lead" },
+    ];
+
+    if ((lead.lastContactedAt ?? lead.dateContacted) && lead.status !== "New") {
+      events.push({
+        leadId: lead.id,
+        date: lead.lastContactedAt ?? lead.dateContacted,
+        event: "contacted",
+      });
+    }
+
+    if (["Replied", "In Conversation", "Qualified", "Call Booked", "Closed Won", "Closed Lost"].includes(lead.status)) {
+      events.push({ leadId: lead.id, date: lead.lastContactedAt ?? date, event: "conversation_started" });
+    }
+    if (["Qualified", "Call Booked", "Closed Won", "Closed Lost"].includes(lead.status)) {
+      events.push({ leadId: lead.id, date: lead.lastContactedAt ?? date, event: "qualified" });
+    }
+    if (["Call Booked", "Closed Won", "Closed Lost"].includes(lead.status)) {
+      events.push({ leadId: lead.id, date: lead.lastContactedAt ?? date, event: "call_booked" });
+    }
+    if (lead.status === "Closed Won") {
+      events.push({ leadId: lead.id, date: lead.lastContactedAt ?? date, event: "closed_won" });
+    }
+
+    const deduped = new Map<string, (typeof events)[number]>();
+    for (const event of events) {
+      deduped.set(`${event.leadId}:${event.event}`, event);
+    }
+    return [...deduped.values()];
+  });
+}
+
 export function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
