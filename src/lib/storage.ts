@@ -310,7 +310,8 @@ export const cloudSync = {
         if (error) throw error;
 
         const cloudEntries = new Map<string, unknown>();
-        for (const row of (data ?? []) as Array<{ key: string; value: unknown }>) {
+        const safeRows = (data ?? []) as unknown as Array<{ key: string; value: unknown }>;
+        for (const row of safeRows) {
           cloudEntries.set(row.key, row.value);
         }
 
