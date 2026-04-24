@@ -144,7 +144,10 @@ function LeadFunnelKpis({ leads }: { leads: Lead[] }) {
 }
 
 function DashboardPage() {
-  const entries = useStore(() => dailyStore.list());
+  const entries = useStore(() => {
+    const activityEntries = activityStore.toDailyEntries();
+    return activityEntries.length > 0 ? activityEntries : dailyStore.list();
+  });
   const leads = useStore(() => leadsStore.list());
   const targets = useStore(() => targetsStore.get());
   const [mounted, setMounted] = useState(false);
