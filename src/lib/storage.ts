@@ -1,5 +1,5 @@
-// Local storage layer for the chatter tracker app.
-// All data lives in browser localStorage — single-user, no login.
+// Shared storage layer for the chatter tracker app.
+// Data is cached in browser localStorage and synchronized with the shared backend.
 
 export type DailyEntry = {
   id: string;
@@ -164,6 +164,8 @@ const KEYS = {
   activeTimer: "chatter:activeTimer",
 };
 
+const SYNCABLE_KEYS = Object.values(KEYS).filter((key) => key !== KEYS.activeTimer);
+
 function read<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {
@@ -184,12 +186,74 @@ function write<T>(key: string, value: T) {
 
 // ===== Cloud sync layer =====
 // Single-user mode: data stored in public.app_data keyed by storage key.
-// localStorage is used as a synchronous cache; cloud is the source of truth.
+// localStorage is kept as a fast cache, but startup merges local + cloud so no browser gets stuck with partial data.
 
 import { supabase } from "@/integrations/supabase/client";
 
+function safeParse(raw: string | null) {
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+function mergeArrayValues(localValue: unknown[], cloudValue: unknown[]) {
+  const combined = [...cloudValue, ...localValue];
+  const everyItemHasId = combined.every(
+    (item) => item && typeof item === "object" && "id" in item && typeof item.id === "string",
+  );
+
+  if (everyItemHasId) {
+    const merged = new Map<string, Record<string, unknown>>();
+    for (const item of cloudValue as Array<Record<string, unknown> & { id: string }>) {
+      merged.set(item.id, item);
+    }
+    for (const item of localValue as Array<Record<string, unknown> & { id: string }>) {
+      const previous = merged.get(item.id) ?? {};
+      merged.set(item.id, { ...previous, ...item });
+    }
+    return [...merged.values()];
+  }
+
+  const deduped = new Map<string, unknown>();
+  for (const item of combined) {
+    deduped.set(JSON.stringify(item), item);
+  }
+  return [...deduped.values()];
+}
+
+function mergeStoredValue(key: string, localValue: unknown, cloudValue: unknown) {
+  if (localValue === undefined) return cloudValue;
+  if (cloudValue === undefined) return localValue;
+
+  if (key === KEYS.tags && Array.isArray(localValue) && Array.isArray(cloudValue)) {
+    return [...new Set([...(cloudValue as string[]), ...(localValue as string[])])];
+  }
+
+  if (Array.isArray(localValue) && Array.isArray(cloudValue)) {
+    return mergeArrayValues(localValue, cloudValue);
+  }
+
+  if (
+    localValue &&
+    cloudValue &&
+    typeof localValue === "object" &&
+    typeof cloudValue === "object" &&
+    !Array.isArray(localValue) &&
+    !Array.isArray(cloudValue)
+  ) {
+    return { ...(cloudValue as Record<string, unknown>), ...(localValue as Record<string, unknown>) };
+  }
+
+  return localValue;
+}
+
 export const cloudSync = {
   initialized: false as boolean,
+  initPromise: null as Promise<void> | null,
+  subscribed: false as boolean,
   async push(key: string, value: unknown) {
     if (key === KEYS.activeTimer) return; // ephemeral, skip cloud
     try {
@@ -216,8 +280,7 @@ export const cloudSync = {
   async pushAllLocal() {
     // Push every known local key to cloud (used for initial migration)
     const entries: Array<[string, unknown]> = [];
-    for (const k of Object.values(KEYS)) {
-      if (k === KEYS.activeTimer) continue;
+    for (const k of SYNCABLE_KEYS) {
       const raw = localStorage.getItem(k);
       if (raw) {
         try {
@@ -237,41 +300,82 @@ export const cloudSync = {
     }
   },
   async init() {
-    if (this.initialized || typeof window === "undefined") return;
-    this.initialized = true;
-    // First-time migration: if cloud is empty but localStorage has data, push it.
-    try {
-      const { data } = await supabase.from("app_data" as any).select("key").limit(1);
-      const cloudEmpty = !data || data.length === 0;
-      const hasLocal = Object.values(KEYS).some(
-        (k) => k !== KEYS.activeTimer && localStorage.getItem(k),
-      );
-      if (cloudEmpty && hasLocal) {
-        const n = await this.pushAllLocal();
-        console.log(`[cloudSync] migrated ${n} keys to cloud`);
-      }
-      await this.pullAll();
-    } catch (e) {
-      console.warn("[cloudSync] init failed", e);
-    }
-    // Live updates from other browsers
-    supabase
-      .channel("app_data_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "app_data" },
-        (payload: any) => {
-          const row = payload.new ?? payload.old;
-          if (!row?.key) return;
-          if (payload.eventType === "DELETE") {
-            localStorage.removeItem(row.key);
-          } else {
-            localStorage.setItem(row.key, JSON.stringify(row.value));
+    if (typeof window === "undefined") return;
+    if (this.initialized) return;
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = (async () => {
+      try {
+        const { data, error } = await supabase.from("app_data" as any).select("key,value");
+        if (error) throw error;
+
+        const cloudEntries = new Map<string, unknown>();
+        for (const row of (data ?? []) as Array<{ key: string; value: unknown }>) {
+          cloudEntries.set(row.key, row.value);
+        }
+
+        const rowsToUpsert: Array<{ key: string; value: unknown }> = [];
+        let localChanged = false;
+
+        for (const key of SYNCABLE_KEYS) {
+          const localValue = safeParse(localStorage.getItem(key));
+          const cloudValue = cloudEntries.get(key);
+          const mergedValue = mergeStoredValue(key, localValue, cloudValue);
+
+          if (mergedValue === undefined) continue;
+
+          const mergedJson = JSON.stringify(mergedValue);
+          if (localStorage.getItem(key) !== mergedJson) {
+            localStorage.setItem(key, mergedJson);
+            localChanged = true;
           }
+
+          if (JSON.stringify(cloudValue) !== mergedJson) {
+            rowsToUpsert.push({ key, value: mergedValue });
+          }
+        }
+
+        if (rowsToUpsert.length > 0) {
+          const { error: upsertError } = await supabase.from("app_data" as any).upsert(rowsToUpsert);
+          if (upsertError) throw upsertError;
+        }
+
+        if (localChanged || rowsToUpsert.length > 0) {
           window.dispatchEvent(new CustomEvent("chatter:storage"));
-        },
-      )
-      .subscribe();
+        }
+
+        if (!this.subscribed) {
+          this.subscribed = true;
+          supabase
+            .channel("app_data_changes")
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "app_data" },
+              (payload: any) => {
+                const row = payload.new ?? payload.old;
+                if (!row?.key) return;
+                if (payload.eventType === "DELETE") {
+                  localStorage.removeItem(row.key);
+                } else {
+                  localStorage.setItem(row.key, JSON.stringify(row.value));
+                }
+                window.dispatchEvent(new CustomEvent("chatter:storage"));
+              },
+            )
+            .subscribe();
+        }
+
+        this.initialized = true;
+      } catch (e) {
+        console.warn("[cloudSync] init failed", e);
+        this.initialized = false;
+      } finally {
+        this.initPromise = null;
+        window.dispatchEvent(new CustomEvent("chatter:cloud-ready"));
+      }
+    })();
+
+    return this.initPromise;
   },
 };
 
