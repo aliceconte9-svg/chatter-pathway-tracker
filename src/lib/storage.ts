@@ -176,7 +176,102 @@ function write<T>(key: string, value: T) {
   if (typeof window === "undefined") return;
   localStorage.setItem(key, JSON.stringify(value));
   window.dispatchEvent(new CustomEvent("chatter:storage"));
+  // Fire-and-forget cloud sync
+  void cloudSync.push(key, value);
 }
+
+// ===== Cloud sync layer (Supabase) =====
+// Single-user mode: data stored in public.app_data keyed by storage key.
+// localStorage is used as a synchronous cache; cloud is the source of truth.
+
+import { supabase } from "@/integrations/supabase/client";
+
+export const cloudSync = {
+  initialized: false as boolean,
+  async push(key: string, value: unknown) {
+    if (key === KEYS.activeTimer) return; // ephemeral, skip cloud
+    try {
+      await supabase.from("app_data" as any).upsert({ key, value: value as any });
+    } catch (e) {
+      console.warn("[cloudSync] push failed", key, e);
+    }
+  },
+  async pullAll() {
+    try {
+      const { data, error } = await supabase.from("app_data" as any).select("key,value");
+      if (error) throw error;
+      if (!data) return;
+      for (const row of data as Array<{ key: string; value: unknown }>) {
+        if (Object.values(KEYS).includes(row.key)) {
+          localStorage.setItem(row.key, JSON.stringify(row.value));
+        }
+      }
+      window.dispatchEvent(new CustomEvent("chatter:storage"));
+    } catch (e) {
+      console.warn("[cloudSync] pullAll failed", e);
+    }
+  },
+  async pushAllLocal() {
+    // Push every known local key to cloud (used for initial migration)
+    const entries: Array<[string, unknown]> = [];
+    for (const k of Object.values(KEYS)) {
+      if (k === KEYS.activeTimer) continue;
+      const raw = localStorage.getItem(k);
+      if (raw) {
+        try {
+          entries.push([k, JSON.parse(raw)]);
+        } catch {}
+      }
+    }
+    if (entries.length === 0) return 0;
+    try {
+      const rows = entries.map(([key, value]) => ({ key, value: value as any }));
+      const { error } = await supabase.from("app_data" as any).upsert(rows);
+      if (error) throw error;
+      return rows.length;
+    } catch (e) {
+      console.warn("[cloudSync] pushAllLocal failed", e);
+      return 0;
+    }
+  },
+  async init() {
+    if (this.initialized || typeof window === "undefined") return;
+    this.initialized = true;
+    // First-time migration: if cloud is empty but localStorage has data, push it.
+    try {
+      const { data } = await supabase.from("app_data" as any).select("key").limit(1);
+      const cloudEmpty = !data || data.length === 0;
+      const hasLocal = Object.values(KEYS).some(
+        (k) => k !== KEYS.activeTimer && localStorage.getItem(k),
+      );
+      if (cloudEmpty && hasLocal) {
+        const n = await this.pushAllLocal();
+        console.log(`[cloudSync] migrated ${n} keys to cloud`);
+      }
+      await this.pullAll();
+    } catch (e) {
+      console.warn("[cloudSync] init failed", e);
+    }
+    // Live updates from other browsers
+    supabase
+      .channel("app_data_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_data" },
+        (payload: any) => {
+          const row = payload.new ?? payload.old;
+          if (!row?.key) return;
+          if (payload.eventType === "DELETE") {
+            localStorage.removeItem(row.key);
+          } else {
+            localStorage.setItem(row.key, JSON.stringify(row.value));
+          }
+          window.dispatchEvent(new CustomEvent("chatter:storage"));
+        },
+      )
+      .subscribe();
+  },
+};
 
 export const dailyStore = {
   list: () => read<DailyEntry[]>(KEYS.daily, []),
