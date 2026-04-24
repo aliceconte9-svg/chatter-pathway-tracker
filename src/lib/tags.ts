@@ -1,4 +1,6 @@
-// Tag management — stored in localStorage
+// Tag management — synced through the shared storage layer
+
+import { cloudSync } from "./storage";
 
 const KEY = "chatter:tags";
 
@@ -18,6 +20,7 @@ function write(tags: string[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(KEY, JSON.stringify(tags));
   window.dispatchEvent(new CustomEvent("chatter:storage"));
+  void cloudSync.push(KEY, tags);
 }
 
 export const tagsStore = {

@@ -133,7 +133,7 @@ function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-base">Backup & restore</CardTitle>
           <CardDescription>
-            Data lives in your browser. Export regularly so you don't lose it if cache clears.
+            Data is shared online, but exporting a backup is still recommended.
           </CardDescription>
         </CardHeader>
         <CardContent>
