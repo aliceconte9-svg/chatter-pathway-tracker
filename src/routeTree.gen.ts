@@ -9,55 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WeeklyRouteImport } from './routes/weekly'
-import { Route as TimeRouteImport } from './routes/time'
-import { Route as TiktokRouteImport } from './routes/tiktok'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as PlaybookRouteImport } from './routes/playbook'
-import { Route as LeadsRouteImport } from './routes/leads'
-import { Route as InsightsRouteImport } from './routes/insights'
-import { Route as ExperimentsRouteImport } from './routes/experiments'
-import { Route as DailyRouteImport } from './routes/daily'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DailyRouteImport } from './routes/daily'
+import { Route as ExperimentsRouteImport } from './routes/experiments'
+import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as LeadsRouteImport } from './routes/leads'
+import { Route as PlaybookRouteImport } from './routes/playbook'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TiktokRouteImport } from './routes/tiktok'
+import { Route as TimeRouteImport } from './routes/time'
+import { Route as WeeklyRouteImport } from './routes/weekly'
 
-const WeeklyRoute = WeeklyRouteImport.update({
-  id: '/weekly',
-  path: '/weekly',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TimeRoute = TimeRouteImport.update({
-  id: '/time',
-  path: '/time',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TiktokRoute = TiktokRouteImport.update({
-  id: '/tiktok',
-  path: '/tiktok',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlaybookRoute = PlaybookRouteImport.update({
-  id: '/playbook',
-  path: '/playbook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LeadsRoute = LeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InsightsRoute = InsightsRouteImport.update({
-  id: '/insights',
-  path: '/insights',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExperimentsRoute = ExperimentsRouteImport.update({
-  id: '/experiments',
-  path: '/experiments',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DailyRoute = DailyRouteImport.update({
@@ -65,9 +30,44 @@ const DailyRoute = DailyRouteImport.update({
   path: '/daily',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ExperimentsRoute = ExperimentsRouteImport.update({
+  id: '/experiments',
+  path: '/experiments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsightsRoute = InsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeadsRoute = LeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaybookRoute = PlaybookRouteImport.update({
+  id: '/playbook',
+  path: '/playbook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TiktokRoute = TiktokRouteImport.update({
+  id: '/tiktok',
+  path: '/tiktok',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TimeRoute = TimeRouteImport.update({
+  id: '/time',
+  path: '/time',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WeeklyRoute = WeeklyRouteImport.update({
+  id: '/weekly',
+  path: '/weekly',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -162,60 +162,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/weekly': {
-      id: '/weekly'
-      path: '/weekly'
-      fullPath: '/weekly'
-      preLoaderRoute: typeof WeeklyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/time': {
-      id: '/time'
-      path: '/time'
-      fullPath: '/time'
-      preLoaderRoute: typeof TimeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tiktok': {
-      id: '/tiktok'
-      path: '/tiktok'
-      fullPath: '/tiktok'
-      preLoaderRoute: typeof TiktokRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/playbook': {
-      id: '/playbook'
-      path: '/playbook'
-      fullPath: '/playbook'
-      preLoaderRoute: typeof PlaybookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/leads': {
-      id: '/leads'
-      path: '/leads'
-      fullPath: '/leads'
-      preLoaderRoute: typeof LeadsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/insights': {
-      id: '/insights'
-      path: '/insights'
-      fullPath: '/insights'
-      preLoaderRoute: typeof InsightsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/experiments': {
-      id: '/experiments'
-      path: '/experiments'
-      fullPath: '/experiments'
-      preLoaderRoute: typeof ExperimentsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/daily': {
@@ -225,11 +176,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DailyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/experiments': {
+      id: '/experiments'
+      path: '/experiments'
+      fullPath: '/experiments'
+      preLoaderRoute: typeof ExperimentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights': {
+      id: '/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leads': {
+      id: '/leads'
+      path: '/leads'
+      fullPath: '/leads'
+      preLoaderRoute: typeof LeadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playbook': {
+      id: '/playbook'
+      path: '/playbook'
+      fullPath: '/playbook'
+      preLoaderRoute: typeof PlaybookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tiktok': {
+      id: '/tiktok'
+      path: '/tiktok'
+      fullPath: '/tiktok'
+      preLoaderRoute: typeof TiktokRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/time': {
+      id: '/time'
+      path: '/time'
+      fullPath: '/time'
+      preLoaderRoute: typeof TimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/weekly': {
+      id: '/weekly'
+      path: '/weekly'
+      fullPath: '/weekly'
+      preLoaderRoute: typeof WeeklyRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
