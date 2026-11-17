@@ -59,6 +59,7 @@ export type Objection = (typeof OBJECTIONS)[number] | "";
 
 export type Lead = {
   id: string;
+  platform?: "instagram"; // legacy leads are Instagram; TikTok contacts live in lib/tiktok
   name: string;
   igUsername?: string;
   source?: LeadSource;
@@ -161,6 +162,7 @@ const KEYS = {
   time: "chatter:time",
   activity: "chatter:activity",
   tags: "chatter:tags",
+  tiktok: "chatter:tiktok",
   activeTimer: "chatter:activeTimer",
 };
 
@@ -551,6 +553,7 @@ export function exportAll() {
     experiments: experimentsStore.list(),
     playbook: playbookStore.list(),
     time: timeStore.list(),
+    tiktok: read<unknown[]>(KEYS.tiktok, []),
   };
 }
 
@@ -561,6 +564,7 @@ export function importAll(data: ReturnType<typeof exportAll>) {
   if (data.experiments) experimentsStore.save(data.experiments);
   if (data.playbook) playbookStore.save(data.playbook);
   if (data.time) timeStore.save(data.time);
+  if (data.tiktok) write(KEYS.tiktok, data.tiktok);
 }
 
 export function rebuildActivityFromLeads(leads: Lead[]) {

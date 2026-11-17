@@ -1,3 +1,4 @@
+import { TikTokDashboard } from "@/components/tiktok/TikTokDashboard";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
@@ -152,6 +153,7 @@ function DashboardPage() {
   const targets = useStore(() => targetsStore.get());
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const [platform, setPlatform] = useState<"tiktok" | "instagram">("tiktok");
 
   const weekly = useMemo(() => aggregateByWeek(entries), [entries]);
   const thisKey = currentWeekKey();
@@ -260,6 +262,18 @@ function DashboardPage() {
         </Button>
       </div>
 
+      <div className="inline-flex rounded-md border border-border p-0.5 text-sm">
+        {(["tiktok","instagram"] as const).map((p) => (
+          <button key={p} type="button" onClick={() => setPlatform(p)} className={`rounded px-3 py-1 ${platform === p ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            {p === "tiktok" ? "TikTok" : "Instagram (archivio)"}
+          </button>
+        ))}
+      </div>
+
+      {mounted && platform === "tiktok" && <TikTokDashboard />}
+
+      {platform === "instagram" && (
+        <>
       {mounted && <TodaySection leads={leads} />}
 
       {mounted && (
@@ -473,6 +487,8 @@ function DashboardPage() {
         </CardContent>
       </Card>
       </>
+      )}
+        </>
       )}
     </div>
   );

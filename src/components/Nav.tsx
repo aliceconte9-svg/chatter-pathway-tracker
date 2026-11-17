@@ -9,10 +9,11 @@ import {
   BookOpen,
   Timer,
   Lightbulb,
+  Music2,
 } from "lucide-react";
 
 type NavItem = {
-  to: "/" | "/daily" | "/leads" | "/weekly" | "/experiments" | "/playbook" | "/time" | "/insights" | "/settings";
+  to: "/" | "/tiktok" | "/daily" | "/leads" | "/weekly" | "/experiments" | "/playbook" | "/time" | "/insights" | "/settings";
   label: string;
   icon: typeof BarChart3;
   exact?: boolean;
@@ -20,9 +21,10 @@ type NavItem = {
 
 const items: NavItem[] = [
   { to: "/", label: "Dashboard", icon: BarChart3, exact: true },
+  { to: "/tiktok", label: "TikTok", icon: Music2 },
   { to: "/daily", label: "Daily", icon: CalendarDays },
   { to: "/time", label: "Time", icon: Timer },
-  { to: "/leads", label: "Leads", icon: Users },
+  { to: "/leads", label: "Instagram", icon: Users },
   { to: "/weekly", label: "Weekly", icon: TableProperties },
   { to: "/experiments", label: "Tests", icon: FlaskConical },
   { to: "/playbook", label: "Playbook", icon: BookOpen },

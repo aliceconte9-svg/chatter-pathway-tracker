@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeeklyRouteImport } from './routes/weekly'
 import { Route as TimeRouteImport } from './routes/time'
+import { Route as TiktokRouteImport } from './routes/tiktok'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PlaybookRouteImport } from './routes/playbook'
 import { Route as LeadsRouteImport } from './routes/leads'
@@ -27,6 +28,11 @@ const WeeklyRoute = WeeklyRouteImport.update({
 const TimeRoute = TimeRouteImport.update({
   id: '/time',
   path: '/time',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TiktokRoute = TiktokRouteImport.update({
+  id: '/tiktok',
+  path: '/tiktok',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/leads': typeof LeadsRoute
   '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
+  '/tiktok': typeof TiktokRoute
   '/time': typeof TimeRoute
   '/weekly': typeof WeeklyRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/leads': typeof LeadsRoute
   '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
+  '/tiktok': typeof TiktokRoute
   '/time': typeof TimeRoute
   '/weekly': typeof WeeklyRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/leads': typeof LeadsRoute
   '/playbook': typeof PlaybookRoute
   '/settings': typeof SettingsRoute
+  '/tiktok': typeof TiktokRoute
   '/time': typeof TimeRoute
   '/weekly': typeof WeeklyRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/playbook'
     | '/settings'
+    | '/tiktok'
     | '/time'
     | '/weekly'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/playbook'
     | '/settings'
+    | '/tiktok'
     | '/time'
     | '/weekly'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/playbook'
     | '/settings'
+    | '/tiktok'
     | '/time'
     | '/weekly'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   LeadsRoute: typeof LeadsRoute
   PlaybookRoute: typeof PlaybookRoute
   SettingsRoute: typeof SettingsRoute
+  TiktokRoute: typeof TiktokRoute
   TimeRoute: typeof TimeRoute
   WeeklyRoute: typeof WeeklyRoute
 }
@@ -161,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/time'
       fullPath: '/time'
       preLoaderRoute: typeof TimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tiktok': {
+      id: '/tiktok'
+      path: '/tiktok'
+      fullPath: '/tiktok'
+      preLoaderRoute: typeof TiktokRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeadsRoute: LeadsRoute,
   PlaybookRoute: PlaybookRoute,
   SettingsRoute: SettingsRoute,
+  TiktokRoute: TiktokRoute,
   TimeRoute: TimeRoute,
   WeeklyRoute: WeeklyRoute,
 }
